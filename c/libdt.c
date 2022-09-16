@@ -21,13 +21,21 @@ sudo ldconfig
 #define TURBO_IN_LEN  ((DATA_LEN * 8) + 4)
 #define TURBO_OUT_LEN (900 * 8)
 
+// Reverse constants
+#define REV_TURBO_ITERATIONS   (4)
+#define REV_TURBO_BIT_CNT      (1412)
+#define REV_PAYLOAD_BYTE_CNT   (176)
+#define REV_PAYLOAD_BIT_CNT    (REV_PAYLOAD_BYTE_CNT * 8)
+
 uint8_t* d1;
 uint8_t* d2;
 uint8_t* d3;
 uint8_t* data;
 uint8_t* up;
 uint8_t* msg;
+int8_t* soft_msg;
 struct lte_rate_matcher* dt_rate_matcher;
+struct tdecoder* dt_tdecoder;
 
 static const struct lte_turbo_code dt_fwd_settings = {
     .n = 2,
@@ -84,18 +92,18 @@ crc(uint8_t *data, uint32_t bytes) {
 }
 
 void 
-dt_allocate(){
-	d1 = (uint8_t*) malloc( TURBO_IN_LEN * sizeof(uint8_t) );
-	d2 = (uint8_t*) malloc( TURBO_IN_LEN * sizeof(uint8_t) );
-	d3 = (uint8_t*) malloc( TURBO_IN_LEN * sizeof(uint8_t) );	
-	data = (uint8_t*) malloc( DATA_LEN * sizeof(uint8_t)  );
-	up = (uint8_t*) malloc( DATA_LEN * 8 * sizeof(uint8_t) );
-	msg = (uint8_t*) malloc( DJI_LEN * sizeof(uint8_t) );
+dt_allocate_fwd(){
+	d1 = (uint8_t*) malloc( TURBO_IN_LEN );
+	d2 = (uint8_t*) malloc( TURBO_IN_LEN );
+	d3 = (uint8_t*) malloc( TURBO_IN_LEN );	
+	data = (uint8_t*) malloc( DATA_LEN );
+	up = (uint8_t*) malloc( DATA_LEN * 8 );
+	msg = (uint8_t*) malloc( DJI_LEN );
     dt_rate_matcher = lte_rate_matcher_alloc();
 }
 
 void 
-dt_free() {
+dt_free_fwd() {
 	free(d1);
 	free(d2);
 	free(d3);
@@ -107,10 +115,13 @@ dt_free() {
 
 uint32_t
 dt_turbo_fwd(uint8_t* out, uint8_t* msg) {
-	dt_allocate();
+	//  out must be able to hold 7200 bytes
+	//  in must be of length 176
+	//
+	dt_allocate_fwd();
 	// data init
-	memset(data, 0x00, DATA_LEN);
-	memcpy(data, msg, DJI_LEN);
+	//memset(data, 0x00, DATA_LEN);
+	memcpy(data, msg, DATA_LEN);
 
 	uint32_t res = crc(data, DJI_LEN + SCRAP_LEN);
 	data[DATA_LEN - 3] = (res >> 16) & 0xff;
@@ -136,7 +147,67 @@ dt_turbo_fwd(uint8_t* out, uint8_t* msg) {
 
     lte_turbo_encode(&dt_fwd_settings, up, d1, d2, d3);
     lte_rate_match_fw(dt_rate_matcher, &rm_io, 0);
-    dt_free();
+    dt_free_fwd();
+    return res;
+}
+
+void 
+dt_allocate_rev(){
+	d1 = (uint8_t*) malloc( REV_TURBO_BIT_CNT );
+	d2 = (uint8_t*) malloc( REV_TURBO_BIT_CNT );
+	d3 = (uint8_t*) malloc( REV_TURBO_BIT_CNT );	
+	data = (uint8_t*) malloc( REV_PAYLOAD_BYTE_CNT );
+	//up = (uint8_t*) malloc( DATA_LEN * 8 * sizeof(uint8_t) );
+	//msg = (uint8_t*) malloc( DJI_LEN * sizeof(uint8_t) );
+    dt_rate_matcher = lte_rate_matcher_alloc();
+    dt_tdecoder = alloc_tdec();
+}
+
+void 
+dt_free_rev() {
+	free(d1);
+	free(d2);
+	free(d3);
+	free(data);
+	//free(msg);
+	//free(up);
+    lte_rate_matcher_free(dt_rate_matcher);
+    free_tdec(dt_tdecoder);
+}
+
+uint64_t
+dt_turbo_rev(uint8_t* out, uint8_t* msg) {
+	//  out must be able to hold 176 bytes
+	//  in must be of length 7200
+	//
+	uint64_t res = 0x00;
+	dt_allocate_rev();
+
+	int8_t* soft_msg = (int8_t*) malloc(TURBO_OUT_LEN);
+	for (int i = 0; i < TURBO_OUT_LEN; ++i)	{
+		soft_msg[i] = ((*msg) == 0x00) ? -63 : 63;
+		msg++;
+	}
+
+    // Setup IO sizes and buffers
+    struct lte_rate_matcher_io rm_io = {
+        .D = REV_TURBO_BIT_CNT,
+        .E = TURBO_OUT_LEN,
+        .d = {d1, d2, d3},
+        .e = soft_msg,
+    };
+
+    lte_rate_match_rv(dt_rate_matcher, &rm_io, 0);
+    int status = lte_turbo_decode(dt_tdecoder, 
+    	REV_PAYLOAD_BIT_CNT, 
+    	REV_TURBO_ITERATIONS,
+        out, d1, d2, d3);
+
+  	uint32_t crc_res = crc(out, REV_PAYLOAD_BYTE_CNT);
+    
+    res = ((status & 0x00000000FFFFFFFFUL) << 32) | (crc_res & 0x00000000FFFFFFFFUL);
+    free(soft_msg);
+    dt_free_rev();
     return res;
 }
 
@@ -166,4 +237,3 @@ int main() {
    	return 0;
 }
 */
-
