@@ -46,8 +46,8 @@ def encode(msg_dict=None):
 def frame(msg):
     if len(msg) != 176:
         return None
-    out = np.zeros(7200, dtype=np.uint8)
-    res = libdt.dt_turbo_fwd(out.ctypes.data_as(ct.POINTER(ct.c_uint8)), msg.ctypes.data_as(ct.POINTER(ct.c_uint8)))
+    frame = np.zeros(7200, dtype=np.uint8)
+    res = libdt.dt_turbo_fwd(frame.ctypes.data_as(ct.POINTER(ct.c_uint8)), msg.ctypes.data_as(ct.POINTER(ct.c_uint8)))
     return out
 
 def deframe(frame):
@@ -55,6 +55,17 @@ def deframe(frame):
         return None
     msg = np.ndarray(176, dtype=np.uint8)
     res = libdt.dt_turbo_rev(msg.ctypes.data_as(ct.POINTER(ct.c_uint8)), frame.ctypes.data_as(ct.POINTER(ct.c_uint8)))
+
+    status = np.int32(np.uint32(res >> 32))
+    crc = res & 0xffffffff    
+    return msg
+
+def scramble(frame):
+    if len(frame) != 7200:
+        return None
+    frame = frame.reshape((8,len(frame)//8))
+
+
 
 
 
@@ -88,7 +99,7 @@ if __name__ == '__main__':
         encoded_frame[idx] ^= 0x01
 
     res = libdt.dt_turbo_rev(decoded_frame.ctypes.data_as(ct.POINTER(ct.c_uint8)), encoded_frame.ctypes.data_as(ct.POINTER(ct.c_uint8)))
-    status = np.int32(np.uint32(res >> 32))
+    status = np.int32(np.uint32(res >> 32)) # re-cast to int32
     crc = res & 0xffffffff
 
     decoded_frame.tofile("frame.decoded.bin")
