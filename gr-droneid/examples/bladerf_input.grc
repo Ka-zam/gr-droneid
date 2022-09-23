@@ -38,9 +38,9 @@ blocks:
   parameters:
     beta: '6.76'
     comment: ''
-    cutoff_freq: 5e6
+    cutoff_freq: 7.5e6
     gain: '1.0'
-    samp_rate: samp_rate/decimation
+    samp_rate: samp_rate
     width: 750e3
     win: window.WIN_HAMMING
   states:
@@ -50,18 +50,6 @@ blocks:
     coordinate: [816, 20.0]
     rotation: 0
     state: true
-- name: N
-  id: variable
-  parameters:
-    comment: ''
-    value: '100'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [184, 140.0]
-    rotation: 0
-    state: disabled
 - name: decimation
   id: variable
   parameters:
@@ -86,13 +74,34 @@ blocks:
     start: '500'
     step: '10'
     stop: '6000'
-    value: '2414'
+    value: '2415'
     widget: counter_slider
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [368, 20.0]
+    coordinate: [352, 20.0]
+    rotation: 0
+    state: true
+- name: gain
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: GAIN
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: int
+    start: '0'
+    step: '1'
+    stop: '63'
+    value: '6'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [232, 20.0]
     rotation: 0
     state: true
 - name: lo
@@ -105,9 +114,9 @@ blocks:
     orient: QtCore.Qt.Horizontal
     rangeType: float
     start: '-2000'
-    step: '.01'
+    step: '1'
     stop: '2000'
-    value: '0'
+    value: '-500'
     widget: counter_slider
   states:
     bus_sink: false
@@ -120,26 +129,47 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: 15360000*decimation
+    value: 15360000*1
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [184, 12]
+    coordinate: [16, 92.0]
     rotation: 0
     state: enabled
-- name: vlen
+- name: trig_level
   id: variable
   parameters:
     comment: ''
-    value: '1024'
+    value: '50'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [184, 76.0]
+    coordinate: [1120, 228.0]
     rotation: 0
     state: disabled
+- name: trig_level
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: Trig level
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: float
+    start: '0'
+    step: '1'
+    stop: '50'
+    value: '10'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [616, 20.0]
+    rotation: 0
+    state: true
 - name: blocks_complex_to_float_0
   id: blocks_complex_to_float
   parameters:
@@ -169,9 +199,68 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [960, 464.0]
+    coordinate: [1136, 352.0]
     rotation: 0
     state: true
+- name: blocks_delay_0
+  id: blocks_delay
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    delay: '3500'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_ports: '1'
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1112, 496.0]
+    rotation: 0
+    state: enabled
+- name: blocks_file_sink_0
+  id: blocks_file_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    append: 'False'
+    comment: ''
+    file: /home/magnus/src/drone_id/samples/mv2_2415_1536.fc32
+    type: complex
+    unbuffered: 'False'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [256, 412.0]
+    rotation: 0
+    state: disabled
+- name: blocks_file_source_0
+  id: blocks_file_source
+  parameters:
+    affinity: ''
+    alias: ''
+    begin_tag: pmt.PMT_NIL
+    comment: ''
+    file: /home/magnus/src/drone_id/samples/out.fc32
+    length: '0'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    offset: '0'
+    repeat: 'True'
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [32, 492.0]
+    rotation: 0
+    state: disabled
 - name: blocks_null_sink_0
   id: blocks_null_sink
   parameters:
@@ -186,9 +275,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [352, 432.0]
+    coordinate: [272, 344.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: blocks_rotator_cc_0
   id: blocks_rotator_cc
   parameters:
@@ -203,22 +292,59 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [352, 312.0]
+    coordinate: [624, 336.0]
     rotation: 0
     state: enabled
+- name: blocks_threshold_ff_0
+  id: blocks_threshold_ff
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    high: '1'
+    init: '0'
+    low: '0'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [728, 764.0]
+    rotation: 0
+    state: disabled
+- name: blocks_throttle_0
+  id: blocks_throttle
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    ignoretag: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samples_per_second: samp_rate
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [272, 524.0]
+    rotation: 0
+    state: disabled
 - name: calibrate_bladerf_source_0
   id: calibrate_bladerf_source
   parameters:
     affinity: ''
     alias: ''
     biastee_rx: '0'
-    bw: '28000000'
+    bw: '56000000'
     comment: ''
     external_freq: '10000000'
     external_ref: '0'
     freq: fc*1000000
-    gain0: '63'
-    gain1: '0'
+    gain0: gain
+    gain1: gain
     gm0: '0'
     gm1: '0'
     maxoutbuf: '0'
@@ -229,7 +355,23 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [104, 244.0]
+    coordinate: [32, 244.0]
+    rotation: 0
+    state: enabled
+- name: droneid_trig_save_0
+  id: droneid_trig_save
+  parameters:
+    affinity: ''
+    alias: ''
+    chunk_size: '14200'
+    comment: ''
+    filename: droneid_burst
+    threshold: trig_level
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1344, 508.0]
     rotation: 0
     state: true
 - name: fft_filter_xxx_0
@@ -249,29 +391,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [744, 444.0]
+    coordinate: [888, 332.0]
     rotation: 0
     state: true
-- name: fft_filter_xxx_0_0
-  id: fft_filter_xxx
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    decim: decimation
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    nthreads: '1'
-    samp_delay: '0'
-    taps: LPF_taps
-    type: ccc
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [552, 308.0]
-    rotation: 0
-    state: enabled
 - name: import_0
   id: import
   parameters:
@@ -282,7 +404,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [616, 20.0]
+    coordinate: [1288, 68.0]
     rotation: 0
     state: true
 - name: import_0_0
@@ -295,9 +417,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [704, 20.0]
+    coordinate: [1288, 20.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: note_0
   id: note
   parameters:
@@ -400,7 +522,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [752, 300.0]
+    coordinate: [896, 228.0]
     rotation: 0
     state: true
 - name: qtgui_time_sink_x_0
@@ -420,7 +542,7 @@ blocks:
     alpha9: '1.0'
     autoscale: 'False'
     axislabels: 'True'
-    color1: blue
+    color1: red
     color10: dark blue
     color2: red
     color3: green
@@ -433,7 +555,7 @@ blocks:
     comment: ''
     ctrlpanel: 'False'
     entags: 'True'
-    grid: 'False'
+    grid: 'True'
     gui_hint: ''
     label1: Signal 1
     label10: Signal 10
@@ -446,7 +568,7 @@ blocks:
     label8: Signal 8
     label9: Signal 9
     legend: 'True'
-    marker1: '-1'
+    marker1: '7'
     marker10: '-1'
     marker2: '-1'
     marker3: '-1'
@@ -458,7 +580,7 @@ blocks:
     marker9: '-1'
     name: '""'
     nconnections: '1'
-    size: '256'
+    size: '128'
     srate: samp_rate/decimation
     stemplot: 'False'
     style1: '1'
@@ -473,7 +595,7 @@ blocks:
     style9: '1'
     tr_chan: '0'
     tr_delay: 3e-6
-    tr_level: '.15'
+    tr_level: trig_level
     tr_mode: qtgui.TRIG_MODE_NORM
     tr_slope: qtgui.TRIG_SLOPE_POS
     tr_tag: '""'
@@ -490,14 +612,14 @@ blocks:
     width8: '1'
     width9: '1'
     ylabel: Amplitude
-    ymax: '.5'
+    ymax: trig_level + 1
     ymin: '0'
     yunit: '""'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1184, 444.0]
+    coordinate: [1360, 332.0]
     rotation: 0
     state: true
 - name: qtgui_time_sink_x_0_0
@@ -570,7 +692,7 @@ blocks:
     style9: '1'
     tr_chan: '0'
     tr_delay: '0'
-    tr_level: '0.1'
+    tr_level: '0.2'
     tr_mode: qtgui.TRIG_MODE_NORM
     tr_slope: qtgui.TRIG_SLOPE_POS
     tr_tag: '""'
@@ -597,17 +719,161 @@ blocks:
     coordinate: [632, 172.0]
     rotation: 0
     state: enabled
+- name: qtgui_waterfall_sink_x_0
+  id: qtgui_waterfall_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    axislabels: 'True'
+    bw: samp_rate
+    color1: '0'
+    color10: '0'
+    color2: '0'
+    color3: '0'
+    color4: '0'
+    color5: '0'
+    color6: '0'
+    color7: '0'
+    color8: '0'
+    color9: '0'
+    comment: ''
+    fc: '0'
+    fftsize: '1024'
+    freqhalf: 'True'
+    grid: 'False'
+    gui_hint: ''
+    int_max: '10'
+    int_min: '-140'
+    label1: ''
+    label10: ''
+    label2: ''
+    label3: ''
+    label4: ''
+    label5: ''
+    label6: ''
+    label7: ''
+    label8: ''
+    label9: ''
+    legend: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    name: '""'
+    nconnections: '1'
+    showports: 'False'
+    type: complex
+    update_time: '0.10'
+    wintype: window.WIN_BLACKMAN_hARRIS
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [504, 756.0]
+    rotation: 0
+    state: disabled
+- name: virtual_sink_0
+  id: virtual_sink
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: in
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [272, 292.0]
+    rotation: 0
+    state: enabled
+- name: virtual_sink_1
+  id: virtual_sink
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: in
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [472, 524.0]
+    rotation: 0
+    state: disabled
+- name: virtual_source_0
+  id: virtual_source
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: in
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [448, 332.0]
+    rotation: 0
+    state: true
+- name: virtual_source_0_0
+  id: virtual_source
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: in
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [672, 252.0]
+    rotation: 0
+    state: true
+- name: virtual_source_0_1
+  id: virtual_source
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: in
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [224, 204.0]
+    rotation: 0
+    state: true
+- name: virtual_source_0_2
+  id: virtual_source
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: in
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [920, 492.0]
+    rotation: 0
+    state: true
 
 connections:
 - [blocks_complex_to_float_0, '0', qtgui_time_sink_x_0_0, '0']
+- [blocks_complex_to_mag_squared_0, '0', droneid_trig_save_0, '1']
 - [blocks_complex_to_mag_squared_0, '0', qtgui_time_sink_x_0, '0']
-- [blocks_rotator_cc_0, '0', fft_filter_xxx_0_0, '0']
-- [calibrate_bladerf_source_0, '0', blocks_complex_to_float_0, '0']
-- [calibrate_bladerf_source_0, '0', blocks_rotator_cc_0, '0']
+- [blocks_delay_0, '0', droneid_trig_save_0, '0']
+- [blocks_file_source_0, '0', blocks_throttle_0, '0']
+- [blocks_rotator_cc_0, '0', fft_filter_xxx_0, '0']
+- [blocks_throttle_0, '0', virtual_sink_1, '0']
+- [calibrate_bladerf_source_0, '0', virtual_sink_0, '0']
 - [calibrate_bladerf_source_0, '1', blocks_null_sink_0, '0']
 - [fft_filter_xxx_0, '0', blocks_complex_to_mag_squared_0, '0']
-- [fft_filter_xxx_0_0, '0', fft_filter_xxx_0, '0']
-- [fft_filter_xxx_0_0, '0', qtgui_freq_sink_x_0, '0']
+- [virtual_source_0, '0', blocks_rotator_cc_0, '0']
+- [virtual_source_0_0, '0', qtgui_freq_sink_x_0, '0']
+- [virtual_source_0_1, '0', blocks_complex_to_float_0, '0']
+- [virtual_source_0_2, '0', blocks_delay_0, '0']
 
 metadata:
   file_format: 1

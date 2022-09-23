@@ -7,5 +7,5 @@
 #
 
 install(FILES
-    DESTINATION share/gnuradio/grc/blocks
+    droneid_trig_save.block.yml DESTINATION share/gnuradio/grc/blocks
 )

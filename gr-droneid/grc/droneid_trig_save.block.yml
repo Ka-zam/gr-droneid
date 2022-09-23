@@ -1,0 +1,33 @@
+id: droneid_trig_save
+label: Triggered save
+category: '[Droneid]'
+templates:
+  imports: from gnuradio import droneid
+  make: droneid.trig_save(${chunk_size}, ${threshold}, ${filename})
+  callbacks:
+  - set_threshold(${threshold})
+parameters:
+- id: chunk_size
+  label: Chunk size
+  dtype: int
+  default: 1024
+- id: threshold
+  label: Threshold
+  dtype: float
+  default: 1.0
+- id: filename
+  label: Filename
+  dtype: string
+  default: "samples.fc32"
+inputs:
+- label: in
+  domain: stream
+  dtype: complex
+  vlen: 1
+- label: trigger
+  domain: stream
+  dtype: float
+  vlen: 1
+#  'file_format' specifies the version of the GRC yml format used in the file
+#  and should usually not be changed.
+file_format: 1

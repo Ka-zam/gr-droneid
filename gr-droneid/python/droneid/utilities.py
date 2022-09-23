@@ -7,7 +7,7 @@ def get_fft_size(samp_rate):
 
 def create_zc_sequence(samp_rate, root=600.0):
     CARRIER_SPACING = 15.0e3 #Hz
-    FFT_SIZE = np.int(np.round(samp_rate / CARRIER_SPACING))
+    FFT_SIZE = int(np.round(samp_rate / CARRIER_SPACING))
     LONG_CP_SIZE = np.round(samp_rate / 192000.0)
     SHRT_CP_SIZE = np.round(samp_rate * 0.0000046875)
     OCCUPIED_CARRIERS_INC_DC = 601
@@ -24,3 +24,20 @@ def create_zc_sequence(samp_rate, root=600.0):
     inp = np.fft.fftshift(inp)
     zc = np.conj(np.fft.ifft(inp))
     return zc
+
+def trigger(fname, trsh=1.0, samp_rate=15.36e6):
+    fid = open(fname,'rb')
+    zc = create_zc_sequence(samp_rate)
+    chunk = len(zc) * 2 * 4 # IQ in fc32
+    file_len = fid.seek(0,2)
+    fid.seek(0)
+    print("File length: {:5.2f} GB".format(file_len / 1024.**3))
+    ofs = 0
+    while (ofs < file_len - chunk):
+        data = np.frombuffer( fid.read(chunk) , dtype=np.complex64)
+        data = np.fft.ifft( zc * np.fft.fft(data) )
+        idx = np.where( np.abs(data) > trsh )[0]
+        if len(idx) > 0:
+            for x in idx:
+                print("idx: {:8d}\n".format(x + ofs // 8))
+        ofs += chunk
