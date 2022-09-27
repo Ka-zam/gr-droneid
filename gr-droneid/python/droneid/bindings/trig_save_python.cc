@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(trig_save.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(c6b402f1f07254fa7f4cce4239e45c68)                     */
+/* BINDTOOL_HEADER_FILE_HASH(f4232c8d9e7f6f16fec4a07636e9746c)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -37,9 +37,8 @@ void bind_trig_save(py::module& m)
         std::shared_ptr<trig_save>>(m, "trig_save", D(trig_save))
 
         .def(py::init(&trig_save::make),
-           py::arg("chunk_size"),
            py::arg("threshold"),
-           py::arg("filename"),
+           py::arg("chunk_size"),
            D(trig_save,make)
         )
         

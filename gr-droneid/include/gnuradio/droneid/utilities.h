@@ -1,0 +1,1 @@
+uint32_t fft_size(double samp_rate) { return std::round(samp_rate / 15.0e3); }

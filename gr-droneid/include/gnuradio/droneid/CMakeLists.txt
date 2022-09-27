@@ -11,5 +11,6 @@
 ########################################################################
 install(FILES
     api.h
-    trig_save.h DESTINATION include/gnuradio/droneid
+    trig_save.h 
+    DESTINATION include/gnuradio/droneid
 )

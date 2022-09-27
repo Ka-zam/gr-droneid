@@ -15,7 +15,7 @@ namespace gr {
 namespace droneid {
 
 /*!
- * \brief <+description of block+>
+ * \brief Saves to file when both triggers above threshold
  * \ingroup droneid
  *
  */
@@ -32,7 +32,7 @@ public:
      * class. droneid::trig_save::make is the public interface for
      * creating new instances.
      */
-    static sptr make(int chunk_size, float threshold, const char* filename);
+    static sptr make(float threshold, int chunk_size);
     virtual void set_threshold(float /*threshold*/) = 0;
 };
 
