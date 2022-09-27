@@ -16,18 +16,18 @@
 
 
  
- static const char *__doc_gr_droneid_trig_save = R"doc()doc";
+ static const char *__doc_gr_droneid_trigger = R"doc()doc";
 
 
- static const char *__doc_gr_droneid_trig_save_trig_save_0 = R"doc()doc";
+ static const char *__doc_gr_droneid_trigger_trigger_0 = R"doc()doc";
 
 
- static const char *__doc_gr_droneid_trig_save_trig_save_1 = R"doc()doc";
+ static const char *__doc_gr_droneid_trigger_trigger_1 = R"doc()doc";
 
 
- static const char *__doc_gr_droneid_trig_save_make = R"doc()doc";
+ static const char *__doc_gr_droneid_trigger_make = R"doc()doc";
 
 
- static const char *__doc_gr_droneid_trig_save_set_threshold = R"doc()doc";
+ static const char *__doc_gr_droneid_trigger_set_threshold = R"doc()doc";
 
   

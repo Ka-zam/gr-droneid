@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#ifndef INCLUDED_DRONEID_TRIG_SAVE_H
-#define INCLUDED_DRONEID_TRIG_SAVE_H
+#ifndef INCLUDED_DRONEID_TRIGGER_H
+#define INCLUDED_DRONEID_TRIGGER_H
 
 #include <gnuradio/droneid/api.h>
 #include <gnuradio/sync_block.h>
@@ -19,17 +19,17 @@ namespace droneid {
  * \ingroup droneid
  *
  */
-class DRONEID_API trig_save : virtual public gr::sync_block
+class DRONEID_API trigger : virtual public gr::sync_block
 {
 public:
-    typedef std::shared_ptr<trig_save> sptr;
+    typedef std::shared_ptr<trigger> sptr;
 
     /*!
-     * \brief Return a shared_ptr to a new instance of droneid::trig_save.
+     * \brief Return a shared_ptr to a new instance of droneid::trigger.
      *
-     * To avoid accidental use of raw pointers, droneid::trig_save's
+     * To avoid accidental use of raw pointers, droneid::trigger's
      * constructor is in a private implementation
-     * class. droneid::trig_save::make is the public interface for
+     * class. droneid::trigger::make is the public interface for
      * creating new instances.
      */
     static sptr make(float threshold, int chunk_size);
@@ -39,4 +39,4 @@ public:
 } // namespace droneid
 } // namespace gr
 
-#endif /* INCLUDED_DRONEID_TRIG_SAVE_H */
+#endif /* INCLUDED_DRONEID_TRIGGER_H */

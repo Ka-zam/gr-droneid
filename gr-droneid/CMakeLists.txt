@@ -104,6 +104,7 @@ if(DOXYGEN_FOUND)
 else(DOXYGEN_FOUND)
     option(ENABLE_DOXYGEN "Build docs using Doxygen" OFF)
 endif(DOXYGEN_FOUND)
+set(ENABLE_DOXYGEN OFF)
 
 ########################################################################
 # Create uninstall target

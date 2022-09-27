@@ -11,6 +11,6 @@
 ########################################################################
 install(FILES
     api.h
-    trig_save.h 
+    trigger.h 
     DESTINATION include/gnuradio/droneid
 )

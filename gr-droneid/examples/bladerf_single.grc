@@ -339,8 +339,8 @@ blocks:
     coordinate: [64, 276.0]
     rotation: 0
     state: true
-- name: droneid_trig_save_0
-  id: droneid_trig_save
+- name: droneid_trigger_0
+  id: droneid_trigger
   parameters:
     affinity: ''
     alias: ''

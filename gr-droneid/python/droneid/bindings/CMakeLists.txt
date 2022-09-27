@@ -29,7 +29,7 @@ include(GrPybind)
 ########################################################################
 
 list(APPEND droneid_python_files
-    trig_save_python.cc python_bindings.cc)
+    trigger_python.cc python_bindings.cc)
 
 GR_PYBIND_MAKE_OOT(droneid
    ../../..

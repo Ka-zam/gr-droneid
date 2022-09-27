@@ -13,8 +13,8 @@
 /* If manual edits are made, the following tags should be modified accordingly.    */
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
-/* BINDTOOL_HEADER_FILE(trig_save.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(f4232c8d9e7f6f16fec4a07636e9746c)                     */
+/* BINDTOOL_HEADER_FILE(trigger.h)                                        */
+/* BINDTOOL_HEADER_FILE_HASH(7240b8d17b8c86a4d3f9a426b7ec06c8)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -23,23 +23,23 @@
 
 namespace py = pybind11;
 
-#include <gnuradio/droneid/trig_save.h>
+#include <gnuradio/droneid/trigger.h>
 // pydoc.h is automatically generated in the build directory
-#include <trig_save_pydoc.h>
+#include <trigger_pydoc.h>
 
-void bind_trig_save(py::module& m)
+void bind_trigger(py::module& m)
 {
 
-    using trig_save    = ::gr::droneid::trig_save;
+    using trigger    = ::gr::droneid::trigger;
 
 
-    py::class_<trig_save, gr::sync_block, gr::block, gr::basic_block,
-        std::shared_ptr<trig_save>>(m, "trig_save", D(trig_save))
+    py::class_<trigger, gr::sync_block, gr::block, gr::basic_block,
+        std::shared_ptr<trigger>>(m, "trigger", D(trigger))
 
-        .def(py::init(&trig_save::make),
+        .def(py::init(&trigger::make),
            py::arg("threshold"),
            py::arg("chunk_size"),
-           D(trig_save,make)
+           D(trigger,make)
         )
         
 
@@ -47,9 +47,9 @@ void bind_trig_save(py::module& m)
 
 
         
-        .def("set_threshold",&trig_save::set_threshold,       
+        .def("set_threshold",&trigger::set_threshold,       
             py::arg("arg0"),
-            D(trig_save,set_threshold)
+            D(trigger,set_threshold)
         )
 
         ;

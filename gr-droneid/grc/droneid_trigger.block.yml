@@ -1,9 +1,9 @@
-id: droneid_trig_save
+id: droneid_trigger
 label: Trigger
 category: '[Droneid]'
 templates:
   imports: from gnuradio import droneid
-  make: droneid.trig_save(${threshold}, ${chunk_size})
+  make: droneid.trigger(${threshold}, ${chunk_size})
   callbacks:
   - set_threshold(${threshold})
 parameters:
