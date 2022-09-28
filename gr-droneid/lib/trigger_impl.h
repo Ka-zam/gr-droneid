@@ -9,7 +9,7 @@
 #define INCLUDED_DRONEID_TRIGGER_IMPL_H
 
 #include <gnuradio/droneid/trigger.h>
-#include <gnuradio/thread/thread.h>
+#include <volk/volk.h>
 
 namespace gr {
 namespace droneid {
@@ -21,13 +21,13 @@ private:
 	float m_thr;
 	int64_t m_total_items;
 	int32_t m_items_collected;
-	int32_t m_count;
+	int32_t m_trig_count;
 	int32_t m_chunk_size;
     std::vector<gr_complex> m_data;
 	state_t m_state;
     const pmt::pmt_t m_port;
     pmt::pmt_t m_pdu_vector;    
-    pmt::pmt_t m_pdu_meta;
+    //pmt::pmt_t m_pdu_meta;
 public:
     trigger_impl(float threshold, int chunk_size);
     ~trigger_impl();

@@ -277,7 +277,7 @@ blocks:
     alias: ''
     begin_tag: pmt.PMT_NIL
     comment: ''
-    file: /home/magnus/src/drone_id/samples/xae
+    file: /home/magnus/src/drone_id/samples/xad
     length: '0'
     maxoutbuf: '0'
     minoutbuf: '0'

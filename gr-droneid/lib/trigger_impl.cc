@@ -24,21 +24,26 @@ trigger_impl::trigger_impl(float threshold, int chunk_size)
         gr::io_signature::make(0, 0, 0)),
     m_port(pmt::mp("pdu"))
 {
-    message_port_register_out(m_port);
-    m_chunk_size = chunk_size;
     m_thr = threshold;
-    m_total_items = 0;
-    m_state = WAITING;
-    m_items_collected = 0;
-    m_count = 0;
-    m_pdu_vector = pmt::PMT_NIL;
-    m_pdu_meta = pmt::PMT_NIL;
-    m_data.resize(m_chunk_size);
-    set_output_multiple(5*1024);
+    m_chunk_size = chunk_size;
+    message_port_register_out(m_port);
 
+    m_state = WAITING;
+    m_total_items = 0;
+    m_items_collected = 0;
+    m_trig_count = 0;
+    
+    m_data.resize(m_chunk_size);
+    set_output_multiple(1024);
+
+    /*
+    m_pdu_meta = pmt::PMT_NIL;
     pmt::pmt_t m_pdu_meta = pmt::make_dict();
     m_pdu_meta = pmt::dict_add(m_pdu_meta, pmt::intern("type"), pmt::intern("iq"));
     m_pdu_meta = pmt::dict_add(m_pdu_meta, pmt::intern("size"), pmt::from_long(m_chunk_size));
+    pmt_t::pmt_t 
+    m_pdu_meta = pmt::dict_add(m_pdu_meta, pmt::intern("size"), pmt::from_long(m_chunk_size));
+    */
     m_pdu_vector = pmt::make_c32vector(m_chunk_size, gr_complex(0.f,0.f));
 }
 
@@ -53,20 +58,29 @@ void trigger_impl::set_threshold(float t) {
 }
 
 void trigger_impl::send_message(){
+    pmt::pmt_t dict = pmt::make_dict();
+    dict = pmt::dict_add(dict, pmt::intern("type"), pmt::intern("iq"));
+    dict = pmt::dict_add(dict, pmt::intern("size"), pmt::from_long(m_chunk_size));
+    
     for (int i = 0; i < m_chunk_size; ++i) {
         pmt::c32vector_set(m_pdu_vector, i,  m_data.at(i) );
     }
-    pmt::pmt_t msg = pmt::cons(m_pdu_meta, m_pdu_vector);
+    
+    pmt::pmt_t msg = pmt::cons(dict, m_pdu_vector);
     message_port_pub(m_port, msg);
-    /*
-    for (auto &e: m_data)    {
-        e = gr_complex(0.f,0.f);
-    }
-    */
+}
+
+float pwr(const gr_complex* data, int num){
+    float m;
+    float* vec = (float*) volk_malloc(num * sizeof(float), volk_get_alignment());
+    volk_32fc_magnitude_32f(vec, data, num);
+    volk_32f_accumulator_s32f(&m, vec, num);
+    return std::sqrt( m / (float) num );
 }
 
 float average(const float* ptr, const int num){
     float acc = 0.f;
+
     for (int i = 0; i < num; ++i) {
         acc += ptr[i];
     }
@@ -83,12 +97,12 @@ int trigger_impl::work(int noutput_items,
 
     if (m_state == WAITING) { // Waiting for trigger...
         for (int32_t idx = 0; idx < noutput_items; ++idx) {
-            bool trigger1 = (*t1 > m_thr);
-            bool trigger2 = (*t2 > m_thr);
+            const bool trigger1 = (*t1 > m_thr);
+            const bool trigger2 = (*t2 > m_thr);
 
             if (trigger1 && trigger2) {
                 m_state = TRIGGERED;
-                m_count++;
+                m_trig_count++;
 
                 std::cout << "\nTriggered at: " << idx << ", out of " << noutput_items << " \n";
                 // Collect
