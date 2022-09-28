@@ -17,10 +17,10 @@ namespace droneid {
 class trigger_impl : public trigger
 {
 private:
-	typedef enum { COLLECTING, WAITING } state_t;
+	typedef enum { WAITING, TRIGGERED } state_t;
 	float m_thr;
 	int64_t m_total_items;
-	int32_t m_items_written;
+	int32_t m_items_collected;
 	int32_t m_count;
 	int32_t m_chunk_size;
     std::vector<gr_complex> m_data;

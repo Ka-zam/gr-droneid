@@ -1,6 +1,10 @@
 #include <vector>
 #include <iostream>
 
+/*
+g++ -o scratch scratch.cpp
+*/
+
 int main(){
 	std::vector<int> vec = {1,2,3,4,5,6,7,8};
 
@@ -18,5 +22,15 @@ int main(){
 		std::cout << v << " ";
 	}
 	std::cout << std::endl;
+
+	std::vector<int> v2;
+	v2.resize(3);
+	v2[4] = 1;
+	for (auto &v: v2){
+		std::cout << v << " ";
+	}
+	std::cout << std::endl;
+
+
 	return 0;
 }
