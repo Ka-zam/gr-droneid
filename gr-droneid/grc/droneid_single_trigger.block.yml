@@ -1,11 +1,16 @@
 id: droneid_single_trigger
 label: Single trigger
+flags: [ python, cpp ]
 category: '[Droneid]'
 templates:
   imports: from gnuradio import droneid
   make: droneid.single_trigger(${threshold}, ${chunk_size})
   callbacks:
   - set_threshold(${threshold})
+cpp_templates:
+    includes: ['#include <gnuradio/droneid/single_trigger.h>']
+    declarations: 'droneid::single_trigger::sptr ${id};'
+    make: 'this->${id} = droneid::single_trigger::make();'  
 parameters:
 - id: threshold
   label: Threshold
