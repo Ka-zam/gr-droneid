@@ -11,7 +11,7 @@ options:
     gen_linking: dynamic
     generate_options: qt_gui
     hier_block_src_path: '.:'
-    id: bladeRF_dji_trigger
+    id: bladerf_single_trigger
     max_nouts: '0'
     output_language: python
     placement: (0,0)
@@ -22,7 +22,7 @@ options:
     run_options: prompt
     sizing_mode: fixed
     thread_safe_setters: ''
-    title: bladeRF DJI trigger
+    title: Single DJI trigger
     window_size: (1000,1000)
   states:
     bus_sink: false
@@ -47,7 +47,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [816, 20.0]
+    coordinate: [8, 164.0]
     rotation: 0
     state: true
 - name: decimation
@@ -62,25 +62,67 @@ blocks:
     coordinate: [992, 20.0]
     rotation: 0
     state: enabled
+- name: delay_iq
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: IQ Delay
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: int
+    start: '0'
+    step: '1'
+    stop: '20000'
+    value: '3300'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [232, 148.0]
+    rotation: 0
+    state: true
+- name: delay_t1
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: Delay T1
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: int
+    start: '1000'
+    step: '1'
+    stop: '3000'
+    value: '2450'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [736, 20.0]
+    rotation: 0
+    state: true
 - name: fc
   id: variable_qtgui_range
   parameters:
     comment: ''
     gui_hint: ''
-    label: Fc
+    label: FC
     min_len: '200'
     orient: QtCore.Qt.Horizontal
     rangeType: float
     start: '500'
     step: '.5'
     stop: '6000'
-    value: '2414.5'
+    value: '2415.'
     widget: counter_slider
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [352, 20.0]
+    coordinate: [344, 20.0]
     rotation: 0
     state: true
 - name: gain
@@ -88,14 +130,14 @@ blocks:
   parameters:
     comment: ''
     gui_hint: ''
-    label: Gain
+    label: GAIN
     min_len: '200'
     orient: QtCore.Qt.Horizontal
     rangeType: int
     start: '0'
     step: '1'
     stop: '63'
-    value: '60'
+    value: '6'
     widget: counter_slider
   states:
     bus_sink: false
@@ -116,7 +158,7 @@ blocks:
     start: '-2000'
     step: '1'
     stop: '2000'
-    value: '-500'
+    value: '-506'
     widget: counter_slider
   states:
     bus_sink: false
@@ -134,21 +176,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [136, 84.0]
+    coordinate: [8, 92.0]
     rotation: 0
     state: enabled
-- name: trig_level
-  id: variable
-  parameters:
-    comment: ''
-    value: '50'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1120, 228.0]
-    rotation: 0
-    state: disabled
 - name: trig_level
   id: variable_qtgui_range
   parameters:
@@ -161,7 +191,7 @@ blocks:
     start: '0'
     step: '.1'
     stop: '50'
-    value: '10'
+    value: '5'
     widget: counter_slider
   states:
     bus_sink: false
@@ -170,22 +200,6 @@ blocks:
     coordinate: [616, 20.0]
     rotation: 0
     state: true
-- name: blocks_complex_to_float_0
-  id: blocks_complex_to_float
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [416, 192.0]
-    rotation: 0
-    state: disabled
 - name: blocks_complex_to_mag_squared_0
   id: blocks_complex_to_mag_squared
   parameters:
@@ -199,16 +213,16 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1136, 352.0]
+    coordinate: [736, 464.0]
     rotation: 0
-    state: disabled
-- name: blocks_delay_0
+    state: true
+- name: blocks_delay_0_0
   id: blocks_delay
   parameters:
     affinity: ''
     alias: ''
     comment: ''
-    delay: 3500*int(samp_rate/15.36e6)
+    delay: delay_iq
     maxoutbuf: '0'
     minoutbuf: '0'
     num_ports: '1'
@@ -218,27 +232,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1112, 496.0]
+    coordinate: [504, 368.0]
     rotation: 0
-    state: disabled
-- name: blocks_file_sink_0
-  id: blocks_file_sink
-  parameters:
-    affinity: ''
-    alias: ''
-    append: 'False'
-    comment: ''
-    file: /home/magnus/src/drone_id/samples/mv2_2415_1536.fc32
-    type: complex
-    unbuffered: 'False'
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [256, 412.0]
-    rotation: 0
-    state: disabled
+    state: enabled
 - name: blocks_file_source_0
   id: blocks_file_source
   parameters:
@@ -246,7 +242,7 @@ blocks:
     alias: ''
     begin_tag: pmt.PMT_NIL
     comment: ''
-    file: /home/magnus/src/drone_id/samples/xam
+    file: /home/magnus/src/drone_id/samples/xad
     length: '0'
     maxoutbuf: '0'
     minoutbuf: '0'
@@ -258,9 +254,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [32, 492.0]
+    coordinate: [8, 796.0]
     rotation: 0
-    state: disabled
+    state: enabled
 - name: blocks_rotator_cc_0
   id: blocks_rotator_cc
   parameters:
@@ -275,27 +271,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [624, 336.0]
+    coordinate: [224, 424.0]
     rotation: 0
-    state: disabled
-- name: blocks_threshold_ff_0
-  id: blocks_threshold_ff
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    high: '1'
-    init: '0'
-    low: '0'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [728, 764.0]
-    rotation: 0
-    state: disabled
+    state: enabled
 - name: blocks_throttle_0
   id: blocks_throttle
   parameters:
@@ -312,16 +290,16 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [272, 524.0]
+    coordinate: [264, 828.0]
     rotation: 0
-    state: disabled
+    state: enabled
 - name: calibrate_bladerf_single_c_0
   id: calibrate_bladerf_single_c
   parameters:
     affinity: ''
     alias: ''
     biastee_rx: '0'
-    bw: '56000000'
+    bw: int(samp_rate * 1.2)
     comment: ''
     external_freq: '10000000'
     external_ref: '1'
@@ -336,26 +314,39 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [64, 276.0]
+    coordinate: [8, 620.0]
     rotation: 0
-    state: true
-- name: droneid_trigger_0
-  id: droneid_trigger
+    state: disabled
+- name: droneid_print_msg_0
+  id: droneid_print_msg
   parameters:
     affinity: ''
     alias: ''
     comment: ''
-    filename: droneid_burst_3072
-    threshold: trig_level
-    zc4: utilities.create_zc_sequence(samp_rate/decimation, 4)
-    zc6: utilities.create_zc_sequence(samp_rate/decimation, 6)
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1112, 588.0]
+    coordinate: [1208, 328.0]
     rotation: 0
-    state: disabled
+    state: true
+- name: droneid_single_trigger_0
+  id: droneid_single_trigger
+  parameters:
+    affinity: ''
+    alias: ''
+    chunk_size: '9600'
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    threshold: '1.0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [992, 384.0]
+    rotation: 0
+    state: true
 - name: fft_filter_xxx_0
   id: fft_filter_xxx
   parameters:
@@ -367,15 +358,33 @@ blocks:
     minoutbuf: '0'
     nthreads: '1'
     samp_delay: '0'
-    taps: utilities.create_zc_sequence(samp_rate/decimation)
+    taps: utilities.create_zc_sequence(samp_rate/decimation,4)
     type: ccc
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [888, 332.0]
+    coordinate: [504, 444.0]
     rotation: 0
-    state: disabled
+    state: true
+- name: fosphor_glfw_sink_c_0
+  id: fosphor_glfw_sink_c
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    freq_center: '0'
+    freq_span: samp_rate
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    wintype: window.WIN_KAISER
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [504, 556.0]
+    rotation: 0
+    state: true
 - name: import_0
   id: import
   parameters:
@@ -414,7 +423,7 @@ blocks:
 
       2459.5                       5816.5
 
-      2474.5 (rarely)         5836.5  (rarely)
+      2474.5 (rarely)      5836.5  (rarely)
 
 
       FFT length: 1024'
@@ -426,87 +435,6 @@ blocks:
     coordinate: [1096, 20.0]
     rotation: 0
     state: true
-- name: qtgui_freq_sink_x_0
-  id: qtgui_freq_sink_x
-  parameters:
-    affinity: ''
-    alias: ''
-    alpha1: '1.0'
-    alpha10: '1.0'
-    alpha2: '1.0'
-    alpha3: '1.0'
-    alpha4: '1.0'
-    alpha5: '1.0'
-    alpha6: '1.0'
-    alpha7: '1.0'
-    alpha8: '1.0'
-    alpha9: '1.0'
-    autoscale: 'False'
-    average: '1.0'
-    axislabels: 'True'
-    bw: samp_rate/decimation
-    color1: '"blue"'
-    color10: '"dark blue"'
-    color2: '"red"'
-    color3: '"green"'
-    color4: '"black"'
-    color5: '"cyan"'
-    color6: '"magenta"'
-    color7: '"yellow"'
-    color8: '"dark red"'
-    color9: '"dark green"'
-    comment: ''
-    ctrlpanel: 'False'
-    fc: '0'
-    fftsize: '1024'
-    freqhalf: 'True'
-    grid: 'True'
-    gui_hint: ''
-    label: Relative Gain
-    label1: ''
-    label10: ''''''
-    label2: ''''''
-    label3: ''''''
-    label4: ''''''
-    label5: ''''''
-    label6: ''''''
-    label7: ''''''
-    label8: ''''''
-    label9: ''''''
-    legend: 'True'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    name: '"Freq"'
-    nconnections: '1'
-    norm_window: 'False'
-    showports: 'False'
-    tr_chan: '0'
-    tr_level: '0.0'
-    tr_mode: qtgui.TRIG_MODE_FREE
-    tr_tag: '""'
-    type: complex
-    units: dB
-    update_time: '0.10'
-    width1: '1'
-    width10: '1'
-    width2: '1'
-    width3: '1'
-    width4: '1'
-    width5: '1'
-    width6: '1'
-    width7: '1'
-    width8: '1'
-    width9: '1'
-    wintype: window.WIN_BLACKMAN_hARRIS
-    ymax: '10'
-    ymin: '-140'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [896, 228.0]
-    rotation: 0
-    state: disabled
 - name: qtgui_time_sink_x_0
   id: qtgui_time_sink_x
   parameters:
@@ -524,7 +452,7 @@ blocks:
     alpha9: '1.0'
     autoscale: 'False'
     axislabels: 'True'
-    color1: red
+    color1: blue
     color10: dark blue
     color2: red
     color3: green
@@ -539,9 +467,9 @@ blocks:
     entags: 'True'
     grid: 'True'
     gui_hint: ''
-    label1: Signal 1
+    label1: Trigger 1
     label10: Signal 10
-    label2: Signal 2
+    label2: Trigger 2
     label3: Signal 3
     label4: Signal 4
     label5: Signal 5
@@ -552,7 +480,7 @@ blocks:
     legend: 'True'
     marker1: '7'
     marker10: '-1'
-    marker2: '-1'
+    marker2: '3'
     marker3: '-1'
     marker4: '-1'
     marker5: '-1'
@@ -594,17 +522,17 @@ blocks:
     width8: '1'
     width9: '1'
     ylabel: Amplitude
-    ymax: trig_level + 1
+    ymax: '20'
     ymin: '0'
     yunit: '""'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1360, 332.0]
+    coordinate: [992, 500.0]
     rotation: 0
-    state: disabled
-- name: qtgui_time_sink_x_0_0
+    state: true
+- name: qtgui_time_sink_x_0_0_0
   id: qtgui_time_sink_x
   parameters:
     affinity: ''
@@ -674,11 +602,11 @@ blocks:
     style9: '1'
     tr_chan: '0'
     tr_delay: '0'
-    tr_level: '0.2'
-    tr_mode: qtgui.TRIG_MODE_NORM
+    tr_level: '0'
+    tr_mode: qtgui.TRIG_MODE_FREE
     tr_slope: qtgui.TRIG_SLOPE_POS
     tr_tag: '""'
-    type: float
+    type: msg_complex
     update_time: '0.10'
     width1: '1'
     width10: '1'
@@ -698,68 +626,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [632, 172.0]
-    rotation: 0
-    state: disabled
-- name: qtgui_waterfall_sink_x_0
-  id: qtgui_waterfall_sink_x
-  parameters:
-    affinity: ''
-    alias: ''
-    alpha1: '1.0'
-    alpha10: '1.0'
-    alpha2: '1.0'
-    alpha3: '1.0'
-    alpha4: '1.0'
-    alpha5: '1.0'
-    alpha6: '1.0'
-    alpha7: '1.0'
-    alpha8: '1.0'
-    alpha9: '1.0'
-    axislabels: 'True'
-    bw: samp_rate
-    color1: '0'
-    color10: '0'
-    color2: '0'
-    color3: '0'
-    color4: '0'
-    color5: '0'
-    color6: '0'
-    color7: '0'
-    color8: '0'
-    color9: '0'
-    comment: ''
-    fc: '0'
-    fftsize: '1024'
-    freqhalf: 'True'
-    grid: 'False'
-    gui_hint: ''
-    int_max: '10'
-    int_min: '-140'
-    label1: ''
-    label10: ''
-    label2: ''
-    label3: ''
-    label4: ''
-    label5: ''
-    label6: ''
-    label7: ''
-    label8: ''
-    label9: ''
-    legend: 'True'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    name: '""'
-    nconnections: '1'
-    showports: 'False'
-    type: complex
-    update_time: '0.10'
-    wintype: window.WIN_BLACKMAN_hARRIS
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [672, 500.0]
+    coordinate: [1208, 388.0]
     rotation: 0
     state: enabled
 - name: virtual_sink_0
@@ -767,86 +634,42 @@ blocks:
   parameters:
     alias: ''
     comment: ''
-    stream_id: in
+    stream_id: stream
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [304, 348.0]
+    coordinate: [496, 780.0]
     rotation: 0
     state: enabled
-- name: virtual_sink_1
-  id: virtual_sink
-  parameters:
-    alias: ''
-    comment: ''
-    stream_id: in
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [472, 524.0]
-    rotation: 0
-    state: disabled
 - name: virtual_source_0
   id: virtual_source
   parameters:
     alias: ''
     comment: ''
-    stream_id: in
+    stream_id: stream
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [456, 316.0]
-    rotation: 0
-    state: disabled
-- name: virtual_source_0_0
-  id: virtual_source
-  parameters:
-    alias: ''
-    comment: ''
-    stream_id: in
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [504, 436.0]
+    coordinate: [24, 420.0]
     rotation: 0
     state: true
-- name: virtual_source_0_1
-  id: virtual_source
-  parameters:
-    alias: ''
-    comment: ''
-    stream_id: in
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [224, 204.0]
-    rotation: 0
-    state: disabled
-- name: virtual_source_0_2
-  id: virtual_source
-  parameters:
-    alias: ''
-    comment: ''
-    stream_id: in
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [920, 492.0]
-    rotation: 0
-    state: disabled
 
 connections:
-- [blocks_complex_to_float_0, '0', qtgui_time_sink_x_0_0, '0']
+- [blocks_complex_to_mag_squared_0, '0', droneid_single_trigger_0, '1']
+- [blocks_complex_to_mag_squared_0, '0', qtgui_time_sink_x_0, '0']
+- [blocks_delay_0_0, '0', droneid_single_trigger_0, '0']
+- [blocks_file_source_0, '0', blocks_throttle_0, '0']
+- [blocks_rotator_cc_0, '0', blocks_delay_0_0, '0']
+- [blocks_rotator_cc_0, '0', fft_filter_xxx_0, '0']
+- [blocks_rotator_cc_0, '0', fosphor_glfw_sink_c_0, '0']
+- [blocks_throttle_0, '0', virtual_sink_0, '0']
 - [calibrate_bladerf_single_c_0, '0', virtual_sink_0, '0']
-- [virtual_source_0_0, '0', qtgui_freq_sink_x_0, '0']
-- [virtual_source_0_0, '0', qtgui_waterfall_sink_x_0, '0']
-- [virtual_source_0_1, '0', blocks_complex_to_float_0, '0']
+- [droneid_single_trigger_0, pdu, droneid_print_msg_0, in]
+- [droneid_single_trigger_0, pdu, qtgui_time_sink_x_0_0_0, in]
+- [fft_filter_xxx_0, '0', blocks_complex_to_mag_squared_0, '0']
+- [virtual_source_0, '0', blocks_rotator_cc_0, '0']
 
 metadata:
   file_format: 1

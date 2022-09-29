@@ -9,6 +9,7 @@
 #define INCLUDED_DRONEID_SINGLE_TRIGGER_IMPL_H
 
 #include <gnuradio/droneid/single_trigger.h>
+#include <volk/volk.h>
 
 namespace gr {
 namespace droneid {
@@ -16,12 +17,26 @@ namespace droneid {
 class single_trigger_impl : public single_trigger
 {
 private:
-	
+    typedef enum { WAITING, TRIGGERED } state_t;
+    float m_thr;
+    float m_t1_last_sample;
+    uint64_t m_total_items;
+    int32_t m_items_collected;
+    int32_t m_trig_count;
+    int32_t m_chunk_size;
+    std::vector<gr_complex> m_data;
+    std::vector<float> m_t1_samples;
+    state_t m_state;
+    const pmt::pmt_t m_port;
+    pmt::pmt_t m_pdu_vector;
+    float pwr(const gr_complex* data, const int num);
+    float toa();
 public:
     single_trigger_impl(float threshold, int chunk_size);
     ~single_trigger_impl();
 
-    void set_threshold(float /*threshold*/) override;
+    void send_message();
+    void set_threshold(float t) override;
     int work(int noutput_items,
              gr_vector_const_void_star& input_items,
              gr_vector_void_star& output_items);

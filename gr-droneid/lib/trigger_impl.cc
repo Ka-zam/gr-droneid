@@ -11,11 +11,6 @@
 namespace gr {
 namespace droneid {
 
-float pwr(const gr_complex* data, int num);
-gr_complex average(const gr_complex* ptr, const int num);
-float toa(const std::vector<float> &y);
-
-
 trigger::sptr trigger::make(float threshold, int chunk_size)
 {
     return gnuradio::make_block_sptr<trigger_impl>(threshold, chunk_size);
@@ -27,7 +22,7 @@ trigger_impl::trigger_impl(float threshold, int chunk_size)
     : gr::sync_block("trigger",
         gr::io_signature::make3(3, 3, sizeof(gr_complex), sizeof(float), sizeof(float)),
         gr::io_signature::make(0, 0, 0)),
-    m_port(pmt::mp("pdu"))
+        m_port(pmt::mp("pdu"))
 {
     m_thr = threshold;
     m_chunk_size = chunk_size;
@@ -69,7 +64,7 @@ void trigger_impl::send_message() {
     m_t1_samples.at(0) = 0.81f;
     m_t1_samples.at(1) = 1.00f;
     m_t1_samples.at(2) = 0.20f;
-    float t_frac = toa(m_t1_samples);
+    float t_frac = toa();
     uint64_t t_int = m_total_items;
     if (t_frac > 1.f) { t_frac -= 1.f; m_total_items += 1; }
 
@@ -84,7 +79,7 @@ void trigger_impl::send_message() {
     message_port_pub(m_port, msg);
 }
 
-float pwr(const gr_complex* data, int num){
+float trigger_impl::pwr(const gr_complex* data, const int num) {
     float m;
     float* vec = (float*) volk_malloc(num * sizeof(float), volk_get_alignment());
     volk_32fc_magnitude_squared_32f(vec, data, num);
@@ -93,15 +88,9 @@ float pwr(const gr_complex* data, int num){
     return std::sqrt(m) / (float) num;
 }
 
-gr_complex average(const gr_complex* ptr, const int num){
-    gr_complex acc;
-    volk_32fc_accumulator_s32fc(&acc, ptr, num);
-    return acc / (float) num;
-}
-
-float toa(const std::vector<float> &y) {
-    const float a = .5f * (y.at(0) - y.at(2)) + y.at(1) - y.at(0);
-    const float b = y.at(1) - y.at(0) + a;
+float trigger_impl::toa() {
+    const float a = .5f * (m_t1_samples.at(0) - m_t1_samples.at(2)) + m_t1_samples.at(1) - m_t1_samples.at(0);
+    const float b = m_t1_samples.at(1) - m_t1_samples.at(0) + a;
     return .5 * b / a;
 }
 
