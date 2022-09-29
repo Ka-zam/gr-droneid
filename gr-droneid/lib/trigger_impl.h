@@ -27,7 +27,6 @@ private:
 	state_t m_state;
     const pmt::pmt_t m_port;
     pmt::pmt_t m_pdu_vector;    
-    //pmt::pmt_t m_pdu_meta;
 public:
     trigger_impl(float threshold, int chunk_size);
     ~trigger_impl();

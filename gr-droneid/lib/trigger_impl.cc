@@ -11,6 +11,10 @@
 namespace gr {
 namespace droneid {
 
+float pwr(const gr_complex* data, int num);
+gr_complex average(const gr_complex* ptr, const int num);
+
+
 trigger::sptr trigger::make(float threshold, int chunk_size)
 {
     return gnuradio::make_block_sptr<trigger_impl>(threshold, chunk_size);
@@ -61,6 +65,12 @@ void trigger_impl::send_message(){
     pmt::pmt_t dict = pmt::make_dict();
     dict = pmt::dict_add(dict, pmt::intern("type"), pmt::intern("iq"));
     dict = pmt::dict_add(dict, pmt::intern("size"), pmt::from_long(m_chunk_size));
+
+    const float n = pwr(m_data.data(), 100);
+    const float s = pwr(m_data.data() + 2300, 1080);
+    const float snr_db = 20 * std::log10((s + n) / n);
+    dict = pmt::dict_add(dict, pmt::intern("snr"), pmt::from_float(snr_db));
+    //std::cout << "snr: " << snr_db << "\n";
     
     for (int i = 0; i < m_chunk_size; ++i) {
         pmt::c32vector_set(m_pdu_vector, i,  m_data.at(i) );
@@ -73,17 +83,15 @@ void trigger_impl::send_message(){
 float pwr(const gr_complex* data, int num){
     float m;
     float* vec = (float*) volk_malloc(num * sizeof(float), volk_get_alignment());
-    volk_32fc_magnitude_32f(vec, data, num);
+    volk_32fc_magnitude_squared_32f(vec, data, num);
     volk_32f_accumulator_s32f(&m, vec, num);
-    return std::sqrt( m / (float) num );
+    volk_free(vec);
+    return std::sqrt(m) / (float) num;
 }
 
-float average(const float* ptr, const int num){
-    float acc = 0.f;
-
-    for (int i = 0; i < num; ++i) {
-        acc += ptr[i];
-    }
+gr_complex average(const gr_complex* ptr, const int num){
+    gr_complex acc;
+    volk_32fc_accumulator_s32fc(&acc, ptr, num);
     return acc / (float) num;
 }
 
