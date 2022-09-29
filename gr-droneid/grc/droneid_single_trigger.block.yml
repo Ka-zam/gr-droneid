@@ -1,9 +1,10 @@
-id: droneid_trigger
-label: Dual trigger
+id: droneid_single_trigger
+label: Single trigger
 category: '[Droneid]'
+
 templates:
   imports: from gnuradio import droneid
-  make: droneid.trigger(${threshold}, ${chunk_size})
+  make: droneid.single_trigger(${threshold}, ${chunk_size})
   callbacks:
   - set_threshold(${threshold})
 parameters:
@@ -23,11 +24,7 @@ inputs:
 - label: t1
   domain: stream
   dtype: float
-  vlen: 1
-- label: t2
-  domain: stream
-  dtype: float
-  vlen: 1    
+  vlen: 1 
 outputs:
 - domain: message
   id: pdu
