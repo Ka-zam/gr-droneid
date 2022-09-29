@@ -61,16 +61,16 @@ void trigger_impl::set_threshold(float t) {
     m_thr = t;
 }
 
-void trigger_impl::send_message(){
+void trigger_impl::send_message() {
     pmt::pmt_t dict = pmt::make_dict();
-    dict = pmt::dict_add(dict, pmt::intern("type"), pmt::intern("iq"));
+    dict = pmt::dict_add(dict, pmt::intern("type"), pmt::intern("dji droneid"));
     dict = pmt::dict_add(dict, pmt::intern("size"), pmt::from_long(m_chunk_size));
 
     const float n = pwr(m_data.data(), 100);
     const float s = pwr(m_data.data() + 2300, 1080);
-    const float snr_db = 20 * std::log10((s + n) / n);
+    const float snr_db = 20 * std::log10((s - n) / n);
+
     dict = pmt::dict_add(dict, pmt::intern("snr"), pmt::from_float(snr_db));
-    //std::cout << "snr: " << snr_db << "\n";
     
     for (int i = 0; i < m_chunk_size; ++i) {
         pmt::c32vector_set(m_pdu_vector, i,  m_data.at(i) );
@@ -122,7 +122,8 @@ int trigger_impl::work(int noutput_items,
                 int rem = m_chunk_size - m_items_collected;
                 //std::cout << "   collected " << items_to_collect << " acc: " << m_items_collected << "  rem: " << rem << "\n";
                 if (rem == 0) { 
-                    std::cout << "Completed\n"; 
+                    //std::cout << "Completed\n"; 
+                   send_message();
                     m_items_collected = 0; 
                     m_state = WAITING;
                 }
@@ -134,6 +135,7 @@ int trigger_impl::work(int noutput_items,
             t2++;
         }
         // I got nothing, drop everything and keep listening....
+        m_t1_last_sample = *(t1 - 1); // decr ptr
         m_total_items += noutput_items;
         return noutput_items;
     }
@@ -141,7 +143,7 @@ int trigger_impl::work(int noutput_items,
         int rem = m_chunk_size - m_items_collected;
 
         if (rem == 0) {
-            std::cout << "Completed\n\n";
+            //std::cout << "Completed\n\n";
             send_message();
             m_items_collected = 0;
             m_state = WAITING;

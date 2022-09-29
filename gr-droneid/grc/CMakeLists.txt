@@ -7,5 +7,6 @@
 #
 
 install(FILES
-    droneid_trigger.block.yml DESTINATION share/gnuradio/grc/blocks
+    droneid_trigger.block.yml
+    droneid_print_msg.block.yml DESTINATION share/gnuradio/grc/blocks
 )

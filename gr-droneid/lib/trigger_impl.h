@@ -19,6 +19,7 @@ class trigger_impl : public trigger
 private:
 	typedef enum { WAITING, TRIGGERED } state_t;
 	float m_thr;
+    float m_t1_last_sample;
 	int64_t m_total_items;
 	int32_t m_items_collected;
 	int32_t m_trig_count;
