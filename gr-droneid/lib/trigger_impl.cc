@@ -13,6 +13,7 @@ namespace droneid {
 
 float pwr(const gr_complex* data, int num);
 gr_complex average(const gr_complex* ptr, const int num);
+float toa(const std::vector<float> &y);
 
 
 trigger::sptr trigger::make(float threshold, int chunk_size)
@@ -38,16 +39,8 @@ trigger_impl::trigger_impl(float threshold, int chunk_size)
     m_trig_count = 0;
     
     m_data.resize(m_chunk_size);
+    m_t1_samples.resize(3);
     set_output_multiple(1024);
-
-    /*
-    m_pdu_meta = pmt::PMT_NIL;
-    pmt::pmt_t m_pdu_meta = pmt::make_dict();
-    m_pdu_meta = pmt::dict_add(m_pdu_meta, pmt::intern("type"), pmt::intern("iq"));
-    m_pdu_meta = pmt::dict_add(m_pdu_meta, pmt::intern("size"), pmt::from_long(m_chunk_size));
-    pmt_t::pmt_t 
-    m_pdu_meta = pmt::dict_add(m_pdu_meta, pmt::intern("size"), pmt::from_long(m_chunk_size));
-    */
     m_pdu_vector = pmt::make_c32vector(m_chunk_size, gr_complex(0.f,0.f));
 }
 
@@ -71,6 +64,17 @@ void trigger_impl::send_message() {
     const float snr_db = 20 * std::log10((s - n) / n);
 
     dict = pmt::dict_add(dict, pmt::intern("snr"), pmt::from_float(snr_db));
+
+    // TODO
+    m_t1_samples.at(0) = 0.81f;
+    m_t1_samples.at(1) = 1.00f;
+    m_t1_samples.at(2) = 0.20f;
+    float t_frac = toa(m_t1_samples);
+    uint64_t t_int = m_total_items;
+    if (t_frac > 1.f) { t_frac -= 1.f; m_total_items += 1; }
+
+    dict = pmt::dict_add(dict, pmt::intern("toa_frac"), pmt::from_float(t_frac));
+    dict = pmt::dict_add(dict, pmt::intern("toa_int"), pmt::from_long(t_int));
     
     for (int i = 0; i < m_chunk_size; ++i) {
         pmt::c32vector_set(m_pdu_vector, i,  m_data.at(i) );
@@ -95,6 +99,12 @@ gr_complex average(const gr_complex* ptr, const int num){
     return acc / (float) num;
 }
 
+float toa(const std::vector<float> &y) {
+    const float a = .5f * (y.at(0) - y.at(2)) + y.at(1) - y.at(0);
+    const float b = y.at(1) - y.at(0) + a;
+    return .5 * b / a;
+}
+
 int trigger_impl::work(int noutput_items,
                          gr_vector_const_void_star& input_items,
                          gr_vector_void_star& output_items)
@@ -111,8 +121,8 @@ int trigger_impl::work(int noutput_items,
             if (trigger1 && trigger2) {
                 m_state = TRIGGERED;
                 m_trig_count++;
-
-                std::cout << "\nTriggered at: " << idx << ", out of " << noutput_items << " \n";
+                // TODO
+                // Save TOA samples
                 // Collect
                 int items_to_collect = std::min(noutput_items - idx - 1, m_chunk_size);
                 for (int i = 0; i < items_to_collect; ++i) {
@@ -120,14 +130,14 @@ int trigger_impl::work(int noutput_items,
                 }
                 m_items_collected += items_to_collect;
                 int rem = m_chunk_size - m_items_collected;
-                //std::cout << "   collected " << items_to_collect << " acc: " << m_items_collected << "  rem: " << rem << "\n";
-                if (rem == 0) { 
-                    //std::cout << "Completed\n"; 
-                   send_message();
-                    m_items_collected = 0; 
+                if (!rem) { 
+                    send_message();
+                    m_items_collected = 0;
                     m_state = WAITING;
+                    m_total_items += m_chunk_size;
+                    return m_chunk_size;                    
                 }
-                m_total_items += idx;
+                m_total_items += noutput_items;
                 return noutput_items;
             }
             in++;
@@ -141,9 +151,7 @@ int trigger_impl::work(int noutput_items,
     }
     else if (m_state == TRIGGERED){
         int rem = m_chunk_size - m_items_collected;
-
-        if (rem == 0) {
-            //std::cout << "Completed\n\n";
+        if (!rem) {
             send_message();
             m_items_collected = 0;
             m_state = WAITING;
@@ -151,12 +159,10 @@ int trigger_impl::work(int noutput_items,
         }
         // Still collecting...
         int items_to_collect = std::min(noutput_items, rem);
-        //std::cout << "   COLLECTING: attempting to collect  " << items_to_collect << "\n";
         for (int i = 0; i < items_to_collect; ++i) {
             m_data.at(i + m_items_collected) = *in++;
         }
         m_items_collected += items_to_collect;
-        //std::cout << "   collected " << items_to_collect << " acc: " << m_items_collected << "  rem: " << rem - items_to_collect<< "\n";
         return items_to_collect;
     }
     else {

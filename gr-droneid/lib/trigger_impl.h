@@ -20,11 +20,12 @@ private:
 	typedef enum { WAITING, TRIGGERED } state_t;
 	float m_thr;
     float m_t1_last_sample;
-	int64_t m_total_items;
+	uint64_t m_total_items;
 	int32_t m_items_collected;
 	int32_t m_trig_count;
 	int32_t m_chunk_size;
     std::vector<gr_complex> m_data;
+    std::vector<float> m_t1_samples;
 	state_t m_state;
     const pmt::pmt_t m_port;
     pmt::pmt_t m_pdu_vector;    
