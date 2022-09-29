@@ -1,0 +1,24 @@
+id: droneid_msg_trigger
+label: Message trigger
+category: '[Droneid]'
+templates:
+  imports: from gnuradio import droneid
+  make: droneid.msg_trigger(${threshold})
+  callbacks:
+  - set_threshold(${threshold})
+parameters:
+- id: threshold
+  label: Threshold
+  dtype: float
+  default: 1.0
+inputs:
+- domain: message
+  id: in
+  optional: false
+outputs:
+- domain: message
+  id: pdu
+  optional: true
+#  'file_format' specifies the version of the GRC yml format used in the file
+#  and should usually not be changed.
+file_format: 1

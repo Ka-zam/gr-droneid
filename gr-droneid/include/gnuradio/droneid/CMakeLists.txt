@@ -13,5 +13,6 @@ install(FILES
     api.h
     dual_trigger.h
     print_msg.h
-    single_trigger.h DESTINATION include/gnuradio/droneid
+    single_trigger.h
+    msg_trigger.h DESTINATION include/gnuradio/droneid
 )

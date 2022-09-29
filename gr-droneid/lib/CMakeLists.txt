@@ -15,6 +15,7 @@ list(APPEND droneid_sources
     dual_trigger_impl.cc
     print_msg_impl.cc
     single_trigger_impl.cc
+    msg_trigger_impl.cc
 )
 
 set(droneid_sources "${droneid_sources}" PARENT_SCOPE)

@@ -24,6 +24,7 @@ namespace py = pybind11;
     void bind_dual_trigger(py::module& m);
     void bind_print_msg(py::module& m);
     void bind_single_trigger(py::module& m);
+    void bind_msg_trigger(py::module& m);
 // ) END BINDING_FUNCTION_PROTOTYPES
 
 
@@ -55,5 +56,6 @@ PYBIND11_MODULE(droneid_python, m)
     bind_dual_trigger(m);
     bind_print_msg(m);
     bind_single_trigger(m);
+    bind_msg_trigger(m);
     // ) END BINDING_FUNCTION_CALLS
 }

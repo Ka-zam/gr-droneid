@@ -131,3 +131,4 @@ cpp/scratch
 *.bin
 build/
 gr-droneid/examples/*.py
+gr-droneid/examples/*/

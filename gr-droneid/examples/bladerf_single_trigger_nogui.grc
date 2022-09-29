@@ -389,6 +389,22 @@ blocks:
     coordinate: [24, 500.0]
     rotation: 0
     state: disabled
+- name: droneid_msg_trigger_0
+  id: droneid_msg_trigger
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    threshold: '1.0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1184, 396.0]
+    rotation: 0
+    state: true
 - name: droneid_print_msg_0
   id: droneid_print_msg
   parameters:
@@ -399,7 +415,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1216, 400.0]
+    coordinate: [1376, 400.0]
     rotation: 0
     state: true
 - name: droneid_single_trigger_0
@@ -524,7 +540,8 @@ connections:
 - [blocks_rotator_cc_0, '0', fft_filter_xxx_0, '0']
 - [blocks_throttle_0, '0', virtual_sink_0, '0']
 - [calibrate_bladerf_single_c_0, '0', virtual_sink_0, '0']
-- [droneid_single_trigger_0, pdu, droneid_print_msg_0, in]
+- [droneid_msg_trigger_0, pdu, droneid_print_msg_0, in]
+- [droneid_single_trigger_0, pdu, droneid_msg_trigger_0, in]
 - [fft_filter_xxx_0, '0', blocks_complex_to_mag_squared_0, '0']
 - [virtual_source_0, '0', blocks_rotator_cc_0, '0']
 
