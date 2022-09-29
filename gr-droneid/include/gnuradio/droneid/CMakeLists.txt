@@ -11,7 +11,7 @@
 ########################################################################
 install(FILES
     api.h
-    trigger.h
+    dual_trigger.h
     print_msg.h
     single_trigger.h DESTINATION include/gnuradio/droneid
 )

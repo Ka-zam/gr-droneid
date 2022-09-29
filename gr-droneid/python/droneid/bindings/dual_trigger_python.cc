@@ -13,8 +13,8 @@
 /* If manual edits are made, the following tags should be modified accordingly.    */
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
-/* BINDTOOL_HEADER_FILE(trigger.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(7240b8d17b8c86a4d3f9a426b7ec06c8)                     */
+/* BINDTOOL_HEADER_FILE(dual_trigger.h)                                        */
+/* BINDTOOL_HEADER_FILE_HASH(0abd9ea21c355afe19d2e4791ceaba34)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -23,23 +23,23 @@
 
 namespace py = pybind11;
 
-#include <gnuradio/droneid/trigger.h>
+#include <gnuradio/droneid/dual_trigger.h>
 // pydoc.h is automatically generated in the build directory
-#include <trigger_pydoc.h>
+#include <dual_trigger_pydoc.h>
 
-void bind_trigger(py::module& m)
+void bind_dual_trigger(py::module& m)
 {
 
-    using trigger    = ::gr::droneid::trigger;
+    using dual_trigger    = ::gr::droneid::dual_trigger;
 
 
-    py::class_<trigger, gr::sync_block, gr::block, gr::basic_block,
-        std::shared_ptr<trigger>>(m, "trigger", D(trigger))
+    py::class_<dual_trigger, gr::sync_block, gr::block, gr::basic_block,
+        std::shared_ptr<dual_trigger>>(m, "dual_trigger", D(dual_trigger))
 
-        .def(py::init(&trigger::make),
+        .def(py::init(&dual_trigger::make),
            py::arg("threshold"),
            py::arg("chunk_size"),
-           D(trigger,make)
+           D(dual_trigger,make)
         )
         
 
@@ -47,9 +47,9 @@ void bind_trigger(py::module& m)
 
 
         
-        .def("set_threshold",&trigger::set_threshold,       
+        .def("set_threshold",&dual_trigger::set_threshold,       
             py::arg("arg0"),
-            D(trigger,set_threshold)
+            D(dual_trigger,set_threshold)
         )
 
         ;

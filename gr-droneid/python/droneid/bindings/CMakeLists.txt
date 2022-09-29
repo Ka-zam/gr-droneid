@@ -29,7 +29,7 @@ include(GrPybind)
 ########################################################################
 
 list(APPEND droneid_python_files
-    trigger_python.cc
+    dual_trigger_python.cc
     print_msg_python.cc
     single_trigger_python.cc python_bindings.cc)
 

@@ -1,7 +1,6 @@
 id: droneid_single_trigger
 label: Single trigger
 category: '[Droneid]'
-
 templates:
   imports: from gnuradio import droneid
   make: droneid.single_trigger(${threshold}, ${chunk_size})

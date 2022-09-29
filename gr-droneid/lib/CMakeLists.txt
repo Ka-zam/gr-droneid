@@ -12,7 +12,7 @@
 include(GrPlatform) #define LIB_SUFFIX
 
 list(APPEND droneid_sources
-    trigger_impl.cc
+    dual_trigger_impl.cc
     print_msg_impl.cc
     single_trigger_impl.cc
 )

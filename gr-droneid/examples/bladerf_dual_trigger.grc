@@ -370,6 +370,23 @@ blocks:
     coordinate: [8, 620.0]
     rotation: 0
     state: disabled
+- name: droneid_dual_trigger_0
+  id: droneid_dual_trigger
+  parameters:
+    affinity: ''
+    alias: ''
+    chunk_size: '9600'
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    threshold: trig_level
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1184, 368.0]
+    rotation: 0
+    state: true
 - name: droneid_print_msg_0
   id: droneid_print_msg
   parameters:
@@ -383,23 +400,6 @@ blocks:
     coordinate: [1400, 320.0]
     rotation: 0
     state: true
-- name: droneid_trigger_0
-  id: droneid_trigger
-  parameters:
-    affinity: ''
-    alias: ''
-    chunk_size: '9600'
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    threshold: trig_level
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1192, 368.0]
-    rotation: 0
-    state: enabled
 - name: fft_filter_xxx_0
   id: fft_filter_xxx
   parameters:
@@ -730,13 +730,13 @@ blocks:
     state: true
 
 connections:
-- [blocks_complex_to_mag_squared_0, '0', droneid_trigger_0, '1']
+- [blocks_complex_to_mag_squared_0, '0', droneid_dual_trigger_0, '1']
 - [blocks_complex_to_mag_squared_0, '0', qtgui_time_sink_x_0, '0']
 - [blocks_complex_to_mag_squared_0_0, '0', blocks_multiply_const_xx_0, '0']
 - [blocks_delay_0, '0', fft_filter_xxx_0, '0']
-- [blocks_delay_0_0, '0', droneid_trigger_0, '0']
+- [blocks_delay_0_0, '0', droneid_dual_trigger_0, '0']
 - [blocks_file_source_0, '0', blocks_throttle_0, '0']
-- [blocks_multiply_const_xx_0, '0', droneid_trigger_0, '2']
+- [blocks_multiply_const_xx_0, '0', droneid_dual_trigger_0, '2']
 - [blocks_multiply_const_xx_0, '0', qtgui_time_sink_x_0, '1']
 - [blocks_rotator_cc_0, '0', blocks_delay_0, '0']
 - [blocks_rotator_cc_0, '0', blocks_delay_0_0, '0']
@@ -744,8 +744,8 @@ connections:
 - [blocks_rotator_cc_0, '0', fosphor_glfw_sink_c_0, '0']
 - [blocks_throttle_0, '0', virtual_sink_0, '0']
 - [calibrate_bladerf_single_c_0, '0', virtual_sink_0, '0']
-- [droneid_trigger_0, pdu, droneid_print_msg_0, in]
-- [droneid_trigger_0, pdu, qtgui_time_sink_x_0_0_0, in]
+- [droneid_dual_trigger_0, pdu, droneid_print_msg_0, in]
+- [droneid_dual_trigger_0, pdu, qtgui_time_sink_x_0_0_0, in]
 - [fft_filter_xxx_0, '0', blocks_complex_to_mag_squared_0, '0']
 - [fft_filter_xxx_0_0, '0', blocks_complex_to_mag_squared_0_0, '0']
 - [virtual_source_0, '0', blocks_rotator_cc_0, '0']

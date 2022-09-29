@@ -5,21 +5,21 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#include "trigger_impl.h"
+#include "dual_trigger_impl.h"
 #include <gnuradio/io_signature.h>
 
 namespace gr {
 namespace droneid {
 
-trigger::sptr trigger::make(float threshold, int chunk_size)
+dual_trigger::sptr dual_trigger::make(float threshold, int chunk_size)
 {
-    return gnuradio::make_block_sptr<trigger_impl>(threshold, chunk_size);
+    return gnuradio::make_block_sptr<dual_trigger_impl>(threshold, chunk_size);
 }
 /*
  * The private constructor
  */
-trigger_impl::trigger_impl(float threshold, int chunk_size)
-    : gr::sync_block("trigger",
+dual_trigger_impl::dual_trigger_impl(float threshold, int chunk_size)
+    : gr::sync_block("dual_trigger",
         gr::io_signature::make3(3, 3, sizeof(gr_complex), sizeof(float), sizeof(float)),
         gr::io_signature::make(0, 0, 0)),
         m_port(pmt::mp("pdu"))
@@ -42,14 +42,14 @@ trigger_impl::trigger_impl(float threshold, int chunk_size)
 /*
  * Our virtual destructor.
  */
-trigger_impl::~trigger_impl() {
+dual_trigger_impl::~dual_trigger_impl() {
 }
 
-void trigger_impl::set_threshold(float t) {
+void dual_trigger_impl::set_threshold(float t) {
     m_thr = t;
 }
 
-void trigger_impl::send_message() {
+void dual_trigger_impl::send_message() {
     pmt::pmt_t dict = pmt::make_dict();
     dict = pmt::dict_add(dict, pmt::intern("type"), pmt::intern("dji droneid"));
     dict = pmt::dict_add(dict, pmt::intern("size"), pmt::from_long(m_chunk_size));
@@ -79,7 +79,7 @@ void trigger_impl::send_message() {
     message_port_pub(m_port, msg);
 }
 
-float trigger_impl::pwr(const gr_complex* data, const int num) {
+float dual_trigger_impl::pwr(const gr_complex* data, const int num) {
     float m;
     float* vec = (float*) volk_malloc(num * sizeof(float), volk_get_alignment());
     volk_32fc_magnitude_squared_32f(vec, data, num);
@@ -88,13 +88,13 @@ float trigger_impl::pwr(const gr_complex* data, const int num) {
     return std::sqrt(m) / (float) num;
 }
 
-float trigger_impl::toa() {
+float dual_trigger_impl::toa() {
     const float a = .5f * (m_t1_samples.at(0) - m_t1_samples.at(2)) + m_t1_samples.at(1) - m_t1_samples.at(0);
     const float b = m_t1_samples.at(1) - m_t1_samples.at(0) + a;
     return .5 * b / a;
 }
 
-int trigger_impl::work(int noutput_items,
+int dual_trigger_impl::work(int noutput_items,
                          gr_vector_const_void_star& input_items,
                          gr_vector_void_star& output_items)
 {
@@ -102,12 +102,12 @@ int trigger_impl::work(int noutput_items,
     auto t1 = static_cast<const float*>(input_items[1]);
     auto t2 = static_cast<const float*>(input_items[2]);
 
-    if (m_state == WAITING) { // Waiting for trigger...
+    if (m_state == WAITING) { // Waiting for dual_trigger...
         for (int32_t idx = 0; idx < noutput_items; ++idx) {
-            const bool trigger1 = (*t1 > m_thr);
-            const bool trigger2 = (*t2 > m_thr);
+            const bool dual_trigger1 = (*t1 > m_thr);
+            const bool dual_trigger2 = (*t2 > m_thr);
 
-            if (trigger1 && trigger2) {
+            if (dual_trigger1 && dual_trigger2) {
                 m_state = TRIGGERED;
                 m_trig_count++;
                 // TODO

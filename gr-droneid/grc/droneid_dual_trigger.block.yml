@@ -1,9 +1,9 @@
-id: droneid_trigger
-label: Dual trigger
+id: droneid_dual_trigger
+label: Dual dual_trigger
 category: '[Droneid]'
 templates:
   imports: from gnuradio import droneid
-  make: droneid.trigger(${threshold}, ${chunk_size})
+  make: droneid.dual_trigger(${threshold}, ${chunk_size})
   callbacks:
   - set_threshold(${threshold})
 parameters:

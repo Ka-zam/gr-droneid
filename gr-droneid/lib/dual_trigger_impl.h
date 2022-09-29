@@ -5,16 +5,16 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#ifndef INCLUDED_DRONEID_TRIGGER_IMPL_H
-#define INCLUDED_DRONEID_TRIGGER_IMPL_H
+#ifndef INCLUDED_DRONEID_DUAL_TRIGGER_IMPL_H
+#define INCLUDED_DRONEID_DUAL_TRIGGER_IMPL_H
 
-#include <gnuradio/droneid/trigger.h>
+#include <gnuradio/droneid/dual_trigger.h>
 #include <volk/volk.h>
 
 namespace gr {
 namespace droneid {
 
-class trigger_impl : public trigger
+class dual_trigger_impl : public dual_trigger
 {
 private:
     typedef enum { WAITING, TRIGGERED } state_t;
@@ -32,12 +32,10 @@ private:
     float pwr(const gr_complex* data, const int num);
     float toa();
 public:
-    trigger_impl(float threshold, int chunk_size);
-    ~trigger_impl();
+    dual_trigger_impl(float threshold, int chunk_size);
+    ~dual_trigger_impl();
     void set_threshold(float t) override;
     void send_message();
-
-    // Where all the action really happens
     int work(int noutput_items,
              gr_vector_const_void_star& input_items,
              gr_vector_void_star& output_items);
@@ -46,4 +44,4 @@ public:
 } // namespace droneid
 } // namespace gr
 
-#endif /* INCLUDED_DRONEID_TRIGGER_IMPL_H */
+#endif /* INCLUDED_DRONEID_DUAL_TRIGGER_IMPL_H */

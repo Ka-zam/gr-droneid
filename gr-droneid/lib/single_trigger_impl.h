@@ -34,7 +34,6 @@ private:
 public:
     single_trigger_impl(float threshold, int chunk_size);
     ~single_trigger_impl();
-
     void send_message();
     void set_threshold(float t) override;
     int work(int noutput_items,
