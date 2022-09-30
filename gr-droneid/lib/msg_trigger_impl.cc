@@ -49,12 +49,12 @@ void msg_trigger_impl::handle_msg(const pmt::pmt_t& msg) {
         if (pmt::is_c32vector(vector)) {
             pmt::pmt_t not_found;
             int num = pmt::to_long(pmt::dict_ref(meta, pmt::mp("size"), not_found));
+            
             std::vector<gr_complex> iq_vec;
-
             for (int i = 0; i < num; ++i) {
                 iq_vec.push_back(pmt::c32vector_ref(vector, i ));
             } 
-            std::cout << "iq size: " << iq_vec.size() << "\n";
+            //std::cout << "iq size: " << iq_vec.size() << "\n";
             /*
             for (int i=0;i<5;i++){
                 std::cout << std::real(iq_vec.at(i)) << " ";

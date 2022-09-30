@@ -11,6 +11,8 @@
 namespace gr {
 namespace droneid {
 
+using namespace std::chrono;
+
 save_msg::sptr save_msg::make(std::string filename)
 {
     return gnuradio::make_block_sptr<save_msg_impl>(filename);
@@ -43,9 +45,8 @@ void save_msg_impl::save(const pmt::pmt_t& msg){
             for (int i = 0; i < size; ++i) {
                 iq_vec.push_back(pmt::c32vector_ref(vector, i ));
             }
-            
-			std::time_t now = std::time(nullptr);
-			std::string fn = m_filestem + std::to_string(now) + ".fc32";
+            uint64_t ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+			std::string fn = m_filestem + std::to_string(ms) + ".fc32";
 			FILE* fp = fopen(fn.c_str(), "wb");
 			fwrite((uint8_t *) iq_vec.data(), sizeof(gr_complex), size, fp );
 			fclose(fp);

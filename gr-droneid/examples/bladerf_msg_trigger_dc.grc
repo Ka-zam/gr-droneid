@@ -54,7 +54,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: '1'
+    value: '2'
   states:
     bus_sink: false
     bus_source: false
@@ -74,7 +74,7 @@ blocks:
     start: '0'
     step: '1'
     stop: '20000'
-    value: '3300'
+    value: '4000'
     widget: counter_slider
   states:
     bus_sink: false
@@ -116,7 +116,7 @@ blocks:
     start: '500'
     step: '.5'
     stop: '6000'
-    value: '2415.'
+    value: '2422.'
     widget: counter_slider
   states:
     bus_sink: false
@@ -137,7 +137,7 @@ blocks:
     start: '0'
     step: '1'
     stop: '63'
-    value: '6'
+    value: '3'
     widget: counter_slider
   states:
     bus_sink: false
@@ -166,12 +166,36 @@ blocks:
     bus_structure: null
     coordinate: [488, 20.0]
     rotation: 0
-    state: true
+    state: disabled
+- name: lo1
+  id: variable
+  parameters:
+    comment: ''
+    value: '-7500'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [488, 156.0]
+    rotation: 0
+    state: enabled
+- name: lo2
+  id: variable
+  parameters:
+    comment: ''
+    value: '7500'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [488, 228.0]
+    rotation: 0
+    state: enabled
 - name: samp_rate
   id: variable
   parameters:
     comment: ''
-    value: 15360000*1
+    value: 15360000*2
   states:
     bus_sink: false
     bus_source: false
@@ -200,6 +224,24 @@ blocks:
     coordinate: [616, 20.0]
     rotation: 0
     state: true
+- name: blocks_add_xx_0
+  id: blocks_add_xx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_inputs: '2'
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1032, 512.0]
+    rotation: 0
+    state: true
 - name: blocks_complex_to_mag_squared_0
   id: blocks_complex_to_mag_squared
   parameters:
@@ -213,7 +255,23 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [736, 464.0]
+    coordinate: [936, 448.0]
+    rotation: 0
+    state: true
+- name: blocks_complex_to_mag_squared_0_0
+  id: blocks_complex_to_mag_squared
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [960, 720.0]
     rotation: 0
     state: true
 - name: blocks_delay_0_0
@@ -232,7 +290,26 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [504, 368.0]
+    coordinate: [704, 352.0]
+    rotation: 0
+    state: enabled
+- name: blocks_delay_0_0_0
+  id: blocks_delay
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    delay: delay_iq
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_ports: '1'
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [704, 616.0]
     rotation: 0
     state: enabled
 - name: blocks_file_source_0
@@ -256,7 +333,7 @@ blocks:
     bus_structure: null
     coordinate: [8, 804.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: blocks_rotator_cc_0
   id: blocks_rotator_cc
   parameters:
@@ -265,13 +342,30 @@ blocks:
     comment: ''
     maxoutbuf: '0'
     minoutbuf: '0'
-    phase_inc: lo*1e3/samp_rate*2*np.pi
+    phase_inc: lo1*1e3/samp_rate*2*np.pi
     tag_inc_update: 'False'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [224, 424.0]
+    coordinate: [288, 408.0]
+    rotation: 0
+    state: enabled
+- name: blocks_rotator_cc_0_0
+  id: blocks_rotator_cc
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    phase_inc: lo2*1e3/samp_rate*2*np.pi
+    tag_inc_update: 'False'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [264, 608.0]
     rotation: 0
     state: enabled
 - name: blocks_throttle_0
@@ -292,7 +386,7 @@ blocks:
     bus_structure: null
     coordinate: [264, 836.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: calibrate_bladerf_single_c_0
   id: calibrate_bladerf_single_c
   parameters:
@@ -316,7 +410,7 @@ blocks:
     bus_structure: null
     coordinate: [8, 620.0]
     rotation: 0
-    state: disabled
+    state: enabled
 - name: droneid_msg_trigger_0
   id: droneid_msg_trigger
   parameters:
@@ -330,7 +424,23 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1184, 396.0]
+    coordinate: [1384, 380.0]
+    rotation: 0
+    state: true
+- name: droneid_msg_trigger_0_0
+  id: droneid_msg_trigger
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    threshold: '1.0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1392, 644.0]
     rotation: 0
     state: true
 - name: droneid_print_msg_0
@@ -343,7 +453,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1400, 360.0]
+    coordinate: [1648, 392.0]
     rotation: 0
     state: true
 - name: droneid_save_msg_0
@@ -357,15 +467,15 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1400, 276.0]
+    coordinate: [1640, 484.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: droneid_single_trigger_0
   id: droneid_single_trigger
   parameters:
     affinity: ''
     alias: ''
-    chunk_size: '9600'
+    chunk_size: '20000'
     comment: ''
     maxoutbuf: '0'
     minoutbuf: '0'
@@ -374,7 +484,24 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [992, 384.0]
+    coordinate: [1192, 368.0]
+    rotation: 0
+    state: true
+- name: droneid_single_trigger_0_0
+  id: droneid_single_trigger
+  parameters:
+    affinity: ''
+    alias: ''
+    chunk_size: '20000'
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    threshold: '1.0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1192, 632.0]
     rotation: 0
     state: true
 - name: fft_filter_xxx_0
@@ -394,7 +521,67 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [504, 444.0]
+    coordinate: [704, 428.0]
+    rotation: 0
+    state: true
+- name: fft_filter_xxx_0_0
+  id: fft_filter_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    decim: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    samp_delay: '0'
+    taps: utilities.create_zc_sequence(samp_rate/decimation,4)
+    type: ccc
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [704, 700.0]
+    rotation: 0
+    state: true
+- name: fft_filter_xxx_1
+  id: fft_filter_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    decim: decimation
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    samp_delay: '0'
+    taps: LPF_taps
+    type: ccc
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [512, 404.0]
+    rotation: 0
+    state: true
+- name: fft_filter_xxx_1_0
+  id: fft_filter_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    decim: decimation
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    samp_delay: '0'
+    taps: LPF_taps
+    type: ccc
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [520, 668.0]
     rotation: 0
     state: true
 - name: fosphor_glfw_sink_c_0
@@ -404,15 +591,15 @@ blocks:
     alias: ''
     comment: ''
     freq_center: '0'
-    freq_span: samp_rate
+    freq_span: samp_rate/decimation
     maxoutbuf: '0'
     minoutbuf: '0'
-    wintype: window.WIN_KAISER
+    wintype: window.WIN_HAMMING
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [744, 260.0]
+    coordinate: [1256, 516.0]
     rotation: 0
     state: true
 - name: import_0
@@ -456,7 +643,21 @@ blocks:
       2474.5 (rarely)      5836.5  (rarely)
 
 
-      FFT length: 1024'
+      FFT length: 1024
+
+
+      Dual channel operation:
+
+
+      BW = 2435 - 2410 = 25MHz
+
+      samp_rate = 30.72 Msps
+
+      FC = 2422 MHz
+
+      LO1 = -7.5
+
+      LO2 =  7.5'
     note: Frequency table
   states:
     bus_sink: false
@@ -521,7 +722,7 @@ blocks:
     name: '""'
     nconnections: '1'
     size: '1024'
-    srate: samp_rate
+    srate: samp_rate/decimation
     stemplot: 'False'
     style1: '1'
     style10: '1'
@@ -559,7 +760,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1400, 444.0]
+    coordinate: [1632, 556.0]
     rotation: 0
     state: enabled
 - name: virtual_sink_0
@@ -585,25 +786,52 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [24, 420.0]
+    coordinate: [24, 332.0]
+    rotation: 0
+    state: true
+- name: virtual_source_0_0
+  id: virtual_source
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: stream
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [32, 540.0]
     rotation: 0
     state: true
 
 connections:
+- [blocks_add_xx_0, '0', fosphor_glfw_sink_c_0, '0']
 - [blocks_complex_to_mag_squared_0, '0', droneid_single_trigger_0, '1']
+- [blocks_complex_to_mag_squared_0_0, '0', droneid_single_trigger_0_0, '1']
+- [blocks_delay_0_0, '0', blocks_add_xx_0, '0']
 - [blocks_delay_0_0, '0', droneid_single_trigger_0, '0']
-- [blocks_delay_0_0, '0', fosphor_glfw_sink_c_0, '0']
+- [blocks_delay_0_0_0, '0', blocks_add_xx_0, '1']
+- [blocks_delay_0_0_0, '0', droneid_single_trigger_0_0, '0']
 - [blocks_file_source_0, '0', blocks_throttle_0, '0']
-- [blocks_rotator_cc_0, '0', blocks_delay_0_0, '0']
-- [blocks_rotator_cc_0, '0', fft_filter_xxx_0, '0']
+- [blocks_rotator_cc_0, '0', fft_filter_xxx_1, '0']
+- [blocks_rotator_cc_0_0, '0', fft_filter_xxx_1_0, '0']
 - [blocks_throttle_0, '0', virtual_sink_0, '0']
 - [calibrate_bladerf_single_c_0, '0', virtual_sink_0, '0']
 - [droneid_msg_trigger_0, pdu, droneid_print_msg_0, in]
 - [droneid_msg_trigger_0, pdu, droneid_save_msg_0, in]
 - [droneid_msg_trigger_0, pdu, qtgui_time_sink_x_0_0_0, in]
+- [droneid_msg_trigger_0_0, pdu, droneid_print_msg_0, in]
+- [droneid_msg_trigger_0_0, pdu, droneid_save_msg_0, in]
+- [droneid_msg_trigger_0_0, pdu, qtgui_time_sink_x_0_0_0, in]
 - [droneid_single_trigger_0, pdu, droneid_msg_trigger_0, in]
+- [droneid_single_trigger_0_0, pdu, droneid_msg_trigger_0_0, in]
 - [fft_filter_xxx_0, '0', blocks_complex_to_mag_squared_0, '0']
+- [fft_filter_xxx_0_0, '0', blocks_complex_to_mag_squared_0_0, '0']
+- [fft_filter_xxx_1, '0', blocks_delay_0_0, '0']
+- [fft_filter_xxx_1, '0', fft_filter_xxx_0, '0']
+- [fft_filter_xxx_1_0, '0', blocks_delay_0_0_0, '0']
+- [fft_filter_xxx_1_0, '0', fft_filter_xxx_0_0, '0']
 - [virtual_source_0, '0', blocks_rotator_cc_0, '0']
+- [virtual_source_0_0, '0', blocks_rotator_cc_0_0, '0']
 
 metadata:
   file_format: 1
