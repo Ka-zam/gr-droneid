@@ -1,0 +1,19 @@
+id: droneid_save_msg
+label: Save messages
+category: '[Droneid]'
+
+templates:
+  imports: from gnuradio import droneid
+  make: droneid.save_msg(${filename})
+  callbacks:
+  - set_filename(${filename})
+parameters:
+- id: filename
+  label: Filename
+  dtype: string
+  default: "message_"
+inputs:
+- domain: message
+  id: in
+  optional: true
+file_format: 1

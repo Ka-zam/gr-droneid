@@ -51,6 +51,7 @@ include(GrMinReq)
 ########################################################################
 
 include(GrCompilerSettings)
+message(STATUS "Cmake build type: ${CMAKE_BUILD_TYPE}")
 
 ########################################################################
 # Install directories

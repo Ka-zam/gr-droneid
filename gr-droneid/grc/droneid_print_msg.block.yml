@@ -1,5 +1,5 @@
 id: droneid_print_msg
-label: Print droneid
+label: Print messages
 category: '[Droneid]'
 
 templates:
@@ -10,6 +10,4 @@ inputs:
 - domain: message
   id: in
   optional: true
-#  'file_format' specifies the version of the GRC yml format used in the file
-#  and should usually not be changed.
 file_format: 1

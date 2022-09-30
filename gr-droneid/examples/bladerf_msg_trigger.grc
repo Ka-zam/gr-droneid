@@ -298,7 +298,7 @@ blocks:
   parameters:
     affinity: ''
     alias: ''
-    biastee_rx: '0'
+    biastee_rx: '1'
     bw: int(samp_rate * 1.2)
     comment: ''
     external_freq: '10000000'
@@ -343,7 +343,21 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1400, 320.0]
+    coordinate: [1400, 360.0]
+    rotation: 0
+    state: true
+- name: droneid_save_msg_0
+  id: droneid_save_msg
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    filename: message_
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1400, 276.0]
     rotation: 0
     state: true
 - name: droneid_single_trigger_0
@@ -683,6 +697,7 @@ connections:
 - [blocks_throttle_0, '0', virtual_sink_0, '0']
 - [calibrate_bladerf_single_c_0, '0', virtual_sink_0, '0']
 - [droneid_msg_trigger_0, pdu, droneid_print_msg_0, in]
+- [droneid_msg_trigger_0, pdu, droneid_save_msg_0, in]
 - [droneid_msg_trigger_0, pdu, qtgui_time_sink_x_0_0_0, in]
 - [droneid_single_trigger_0, pdu, droneid_msg_trigger_0, in]
 - [fft_filter_xxx_0, '0', blocks_complex_to_mag_squared_0, '0']

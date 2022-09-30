@@ -1,5 +1,5 @@
 id: droneid_dual_trigger
-label: Dual dual_trigger
+label: Dual trigger
 category: '[Droneid]'
 templates:
   imports: from gnuradio import droneid
@@ -32,6 +32,4 @@ outputs:
 - domain: message
   id: pdu
   optional: true
-#  'file_format' specifies the version of the GRC yml format used in the file
-#  and should usually not be changed.
 file_format: 1
