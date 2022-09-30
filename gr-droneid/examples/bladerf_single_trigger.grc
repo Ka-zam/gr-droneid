@@ -337,6 +337,7 @@ blocks:
     alias: ''
     chunk_size: '9600'
     comment: ''
+    fc: fc + lo * 1e-3
     maxoutbuf: '0'
     minoutbuf: '0'
     threshold: '1.0'

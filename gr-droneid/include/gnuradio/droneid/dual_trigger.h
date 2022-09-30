@@ -15,7 +15,7 @@ namespace gr {
 namespace droneid {
 
 /*!
- * \brief Saves to file when both dual_triggers above threshold
+ * \brief Symbol 4 and 6 dual trigger
  * \ingroup droneid
  *
  */
@@ -32,8 +32,9 @@ public:
      * class. droneid::dual_trigger::make is the public interface for
      * creating new instances.
      */
-    static sptr make(float threshold, int chunk_size);
+    static sptr make(float fc, float threshold, int chunk_size);
     virtual void set_threshold(float /*threshold*/) = 0;
+    virtual void set_fc(float /*fc*/) = 0;    
 };
 
 } // namespace droneid

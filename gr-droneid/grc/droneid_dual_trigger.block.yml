@@ -3,14 +3,19 @@ label: Dual trigger
 category: '[Droneid]'
 templates:
   imports: from gnuradio import droneid
-  make: droneid.dual_trigger(${threshold}, ${chunk_size})
+  make: droneid.dual_trigger(${fc}, ${threshold}, ${chunk_size})
   callbacks:
   - set_threshold(${threshold})
+  - set_fc()
 parameters:
 - id: threshold
   label: Threshold
   dtype: float
   default: 1.0
+- id: fc
+  label: Fc
+  dtype: float
+  default: 2414.5  
 - id: chunk_size
   label: Chunk size
   dtype: int

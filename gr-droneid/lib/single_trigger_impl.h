@@ -18,6 +18,7 @@ class single_trigger_impl : public single_trigger
 {
 private:
     typedef enum { WAITING, TRIGGERED } state_t;
+    float m_fc;
     float m_thr;
     float m_t1_last_sample;
     uint64_t m_total_items;
@@ -32,10 +33,11 @@ private:
     float pwr(const gr_complex* data, const int num);
     float toa();
 public:
-    single_trigger_impl(float threshold, int chunk_size);
+    single_trigger_impl(float fc, float threshold, int chunk_size);
     ~single_trigger_impl();
     void send_message();
     void set_threshold(float t) override;
+    void set_fc(float fc) override;
     int work(int noutput_items,
              gr_vector_const_void_star& input_items,
              gr_vector_void_star& output_items);

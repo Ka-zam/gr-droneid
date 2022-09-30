@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(dual_trigger.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(0abd9ea21c355afe19d2e4791ceaba34)                     */
+/* BINDTOOL_HEADER_FILE_HASH(5fbd1d1d63609284af590e64dc0a28a8)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -37,6 +37,7 @@ void bind_dual_trigger(py::module& m)
         std::shared_ptr<dual_trigger>>(m, "dual_trigger", D(dual_trigger))
 
         .def(py::init(&dual_trigger::make),
+           py::arg("fc"),
            py::arg("threshold"),
            py::arg("chunk_size"),
            D(dual_trigger,make)
@@ -50,6 +51,13 @@ void bind_dual_trigger(py::module& m)
         .def("set_threshold",&dual_trigger::set_threshold,       
             py::arg("arg0"),
             D(dual_trigger,set_threshold)
+        )
+
+
+        
+        .def("set_fc",&dual_trigger::set_fc,       
+            py::arg("arg0"),
+            D(dual_trigger,set_fc)
         )
 
         ;

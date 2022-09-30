@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(single_trigger.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(672f3e3559b2914b75caa0e17b345d46)                     */
+/* BINDTOOL_HEADER_FILE_HASH(3a70553027cf3b2f02a1a06fb7bcf6f3)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -37,6 +37,7 @@ void bind_single_trigger(py::module& m)
         std::shared_ptr<single_trigger>>(m, "single_trigger", D(single_trigger))
 
         .def(py::init(&single_trigger::make),
+           py::arg("fc"),
            py::arg("threshold"),
            py::arg("chunk_size"),
            D(single_trigger,make)
@@ -50,6 +51,13 @@ void bind_single_trigger(py::module& m)
         .def("set_threshold",&single_trigger::set_threshold,       
             py::arg("arg0"),
             D(single_trigger,set_threshold)
+        )
+
+
+        
+        .def("set_fc",&single_trigger::set_fc,       
+            py::arg("arg0"),
+            D(single_trigger,set_fc)
         )
 
         ;

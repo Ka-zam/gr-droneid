@@ -18,6 +18,7 @@ class dual_trigger_impl : public dual_trigger
 {
 private:
     typedef enum { WAITING, TRIGGERED } state_t;
+    float m_fc;
     float m_thr;
     float m_t1_last_sample;
     uint64_t m_total_items;
@@ -32,9 +33,10 @@ private:
     float pwr(const gr_complex* data, const int num);
     float toa();
 public:
-    dual_trigger_impl(float threshold, int chunk_size);
+    dual_trigger_impl(float fc, float threshold, int chunk_size);
     ~dual_trigger_impl();
     void set_threshold(float t) override;
+    void set_fc(float f) override;    
     void send_message();
     int work(int noutput_items,
              gr_vector_const_void_star& input_items,

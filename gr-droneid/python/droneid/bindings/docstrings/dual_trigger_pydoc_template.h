@@ -30,4 +30,7 @@
 
  static const char *__doc_gr_droneid_dual_trigger_set_threshold = R"doc()doc";
 
+
+ static const char *__doc_gr_droneid_dual_trigger_set_fc = R"doc()doc";
+
   

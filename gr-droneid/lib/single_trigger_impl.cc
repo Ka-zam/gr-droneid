@@ -11,21 +11,22 @@
 namespace gr {
 namespace droneid {
 
-single_trigger::sptr single_trigger::make(float threshold, int chunk_size)
+single_trigger::sptr single_trigger::make(float fc,float threshold, int chunk_size)
 {
-    return gnuradio::make_block_sptr<single_trigger_impl>(threshold, chunk_size);
+    return gnuradio::make_block_sptr<single_trigger_impl>(fc, threshold, chunk_size);
 }
 
 
 /*
  * The private constructor
  */
-single_trigger_impl::single_trigger_impl(float threshold, int chunk_size)
+single_trigger_impl::single_trigger_impl(float fc, float threshold, int chunk_size)
     : gr::sync_block("single_trigger",
     gr::io_signature::make2(2, 2 , sizeof(gr_complex), sizeof(float)),
     gr::io_signature::make(0, 0, 0)),
     m_port(pmt::mp("pdu"))
 {
+    m_fc = fc;
     m_thr = threshold;
     m_chunk_size = chunk_size;
     message_port_register_out(m_port);
@@ -47,7 +48,11 @@ single_trigger_impl::single_trigger_impl(float threshold, int chunk_size)
 single_trigger_impl::~single_trigger_impl() {}
 
 void single_trigger_impl::set_threshold(float t) {
-    m_thr = t;    
+    m_thr = t;
+}
+
+void single_trigger_impl::set_fc(float f) {
+    m_fc = f;
 }
 
 void single_trigger_impl::send_message() {
@@ -60,6 +65,7 @@ void single_trigger_impl::send_message() {
     const float snr_db = 20 * std::log10((s - n) / n);
 
     meta = pmt::dict_add(meta, pmt::mp("snr"), pmt::mp(snr_db));
+    meta = pmt::dict_add(meta, pmt::mp("fc"), pmt::mp(m_fc));
 
     // TODO
     m_t1_samples.at(0) = 0.81f;
