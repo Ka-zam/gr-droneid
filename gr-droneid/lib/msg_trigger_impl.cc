@@ -47,16 +47,20 @@ void msg_trigger_impl::handle_msg(const pmt::pmt_t& msg) {
          * Here we should test for symbol 6
          */
         if (pmt::is_c32vector(vector)) {
-            size_t num;
-            const gr_complex* c_ptr = pmt::c32vector_elements(vector, num);
+            pmt::pmt_t not_found;
+            int num = pmt::to_long(pmt::dict_ref(meta, pmt::mp("size"), not_found));
+            std::vector<gr_complex> iq_vec;
 
-            /*
-            pmt_t pmt::(dtype)vector_ref(pmt_t vector, size_t k)
-
-            for (int i = 0; i < m_chunk_size; ++i) {
-                pmt::c32vector_set(m_pdu_vector, i,  m_data.at(i) );
+            for (int i = 0; i < num; ++i) {
+                iq_vec.push_back(pmt::c32vector_ref(vector, i ));
             } 
-            */       
+            std::cout << "iq size: " << iq_vec.size() << "\n";
+            /*
+            for (int i=0;i<5;i++){
+                std::cout << std::real(iq_vec.at(i)) << " ";
+            }
+            std::cout << "\n";
+            */
         }
     }
     message_port_pub(m_port, new_msg);

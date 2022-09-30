@@ -11,7 +11,7 @@ options:
     gen_linking: dynamic
     generate_options: qt_gui
     hier_block_src_path: '.:'
-    id: bladerf_dual_trigger
+    id: bladerf_single_trigger
     max_nouts: '0'
     output_language: python
     placement: (0,0)
@@ -22,7 +22,7 @@ options:
     run_options: prompt
     sizing_mode: fixed
     thread_safe_setters: ''
-    title: Dual DJI trigger
+    title: Single DJI trigger
     window_size: (1000,1000)
   states:
     bus_sink: false
@@ -74,7 +74,7 @@ blocks:
     start: '0'
     step: '1'
     stop: '20000'
-    value: '5750'
+    value: '3300'
     widget: counter_slider
   states:
     bus_sink: false
@@ -176,7 +176,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [16, 92.0]
+    coordinate: [8, 92.0]
     rotation: 0
     state: enabled
 - name: trig_level
@@ -213,44 +213,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [928, 456.0]
+    coordinate: [736, 464.0]
     rotation: 0
     state: true
-- name: blocks_complex_to_mag_squared_0_0
-  id: blocks_complex_to_mag_squared
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [728, 560.0]
-    rotation: 0
-    state: true
-- name: blocks_delay_0
-  id: blocks_delay
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    delay: delay_t1
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    num_ports: '1'
-    type: complex
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [504, 440.0]
-    rotation: 0
-    state: enabled
 - name: blocks_delay_0_0
   id: blocks_delay
   parameters:
@@ -267,7 +232,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [504, 352.0]
+    coordinate: [504, 368.0]
     rotation: 0
     state: enabled
 - name: blocks_file_source_0
@@ -292,24 +257,6 @@ blocks:
     coordinate: [8, 796.0]
     rotation: 0
     state: enabled
-- name: blocks_multiply_const_xx_0
-  id: blocks_multiply_const_xx
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    const: '1'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    type: float
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [928, 556.0]
-    rotation: 0
-    state: true
 - name: blocks_rotator_cc_0
   id: blocks_rotator_cc
   parameters:
@@ -370,21 +317,20 @@ blocks:
     coordinate: [8, 620.0]
     rotation: 0
     state: disabled
-- name: droneid_dual_trigger_0
-  id: droneid_dual_trigger
+- name: droneid_msg_trigger_0
+  id: droneid_msg_trigger
   parameters:
     affinity: ''
     alias: ''
-    chunk_size: '9600'
     comment: ''
     maxoutbuf: '0'
     minoutbuf: '0'
-    threshold: trig_level
+    threshold: '1.0'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1184, 368.0]
+    coordinate: [1184, 396.0]
     rotation: 0
     state: true
 - name: droneid_print_msg_0
@@ -398,6 +344,23 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [1400, 320.0]
+    rotation: 0
+    state: true
+- name: droneid_single_trigger_0
+  id: droneid_single_trigger
+  parameters:
+    affinity: ''
+    alias: ''
+    chunk_size: '9600'
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    threshold: '1.0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [992, 384.0]
     rotation: 0
     state: true
 - name: fft_filter_xxx_0
@@ -417,27 +380,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [720, 436.0]
-    rotation: 0
-    state: true
-- name: fft_filter_xxx_0_0
-  id: fft_filter_xxx
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    decim: '1'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    nthreads: '1'
-    samp_delay: '0'
-    taps: utilities.create_zc_sequence(samp_rate/decimation,6)
-    type: ccc
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [496, 540.0]
+    coordinate: [504, 444.0]
     rotation: 0
     state: true
 - name: fosphor_glfw_sink_c_0
@@ -455,7 +398,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [728, 260.0]
+    coordinate: [744, 260.0]
     rotation: 0
     state: true
 - name: import_0
@@ -562,7 +505,7 @@ blocks:
     marker8: '-1'
     marker9: '-1'
     name: '""'
-    nconnections: '2'
+    nconnections: '1'
     size: '128'
     srate: samp_rate/decimation
     stemplot: 'False'
@@ -602,7 +545,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1184, 492.0]
+    coordinate: [992, 500.0]
     rotation: 0
     state: true
 - name: qtgui_time_sink_x_0_0_0
@@ -699,7 +642,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1400, 388.0]
+    coordinate: [1400, 444.0]
     rotation: 0
     state: enabled
 - name: virtual_sink_0
@@ -730,24 +673,19 @@ blocks:
     state: true
 
 connections:
-- [blocks_complex_to_mag_squared_0, '0', droneid_dual_trigger_0, '1']
+- [blocks_complex_to_mag_squared_0, '0', droneid_single_trigger_0, '1']
 - [blocks_complex_to_mag_squared_0, '0', qtgui_time_sink_x_0, '0']
-- [blocks_complex_to_mag_squared_0_0, '0', blocks_multiply_const_xx_0, '0']
-- [blocks_delay_0, '0', fft_filter_xxx_0, '0']
-- [blocks_delay_0_0, '0', droneid_dual_trigger_0, '0']
+- [blocks_delay_0_0, '0', droneid_single_trigger_0, '0']
 - [blocks_delay_0_0, '0', fosphor_glfw_sink_c_0, '0']
 - [blocks_file_source_0, '0', blocks_throttle_0, '0']
-- [blocks_multiply_const_xx_0, '0', droneid_dual_trigger_0, '2']
-- [blocks_multiply_const_xx_0, '0', qtgui_time_sink_x_0, '1']
-- [blocks_rotator_cc_0, '0', blocks_delay_0, '0']
 - [blocks_rotator_cc_0, '0', blocks_delay_0_0, '0']
-- [blocks_rotator_cc_0, '0', fft_filter_xxx_0_0, '0']
+- [blocks_rotator_cc_0, '0', fft_filter_xxx_0, '0']
 - [blocks_throttle_0, '0', virtual_sink_0, '0']
 - [calibrate_bladerf_single_c_0, '0', virtual_sink_0, '0']
-- [droneid_dual_trigger_0, pdu, droneid_print_msg_0, in]
-- [droneid_dual_trigger_0, pdu, qtgui_time_sink_x_0_0_0, in]
+- [droneid_msg_trigger_0, pdu, droneid_print_msg_0, in]
+- [droneid_msg_trigger_0, pdu, qtgui_time_sink_x_0_0_0, in]
+- [droneid_single_trigger_0, pdu, droneid_msg_trigger_0, in]
 - [fft_filter_xxx_0, '0', blocks_complex_to_mag_squared_0, '0']
-- [fft_filter_xxx_0_0, '0', blocks_complex_to_mag_squared_0_0, '0']
 - [virtual_source_0, '0', blocks_rotator_cc_0, '0']
 
 metadata:

@@ -24,7 +24,6 @@ print_msg_impl::print_msg_impl()
     message_port_register_in(pmt::mp("in"));
     set_msg_handler(pmt::mp("in"), [this](const pmt::pmt_t& msg) { this->print(msg); });    
 }
-
 /*
  * Our virtual destructor.
  */
@@ -35,6 +34,11 @@ void print_msg_impl::print(const pmt::pmt_t& msg)
     if (pmt::is_pdu(msg)) {
         const auto& meta = pmt::car(msg);
         std::cout << pmt::write_string(meta) << "\n";
+    	/*
+    	pmt::pmt_t not_found;
+    	int n = pmt::to_long(pmt::dict_ref(meta, pmt::mp("size"), not_found));
+    	std::cout << "n: " << n << "\n";
+    	*/
     }
 }
 

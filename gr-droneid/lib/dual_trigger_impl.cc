@@ -50,15 +50,15 @@ void dual_trigger_impl::set_threshold(float t) {
 }
 
 void dual_trigger_impl::send_message() {
-    pmt::pmt_t dict = pmt::make_dict();
-    dict = pmt::dict_add(dict, pmt::intern("type"), pmt::intern("dji droneid"));
-    dict = pmt::dict_add(dict, pmt::intern("size"), pmt::from_long(m_chunk_size));
+    pmt::pmt_t meta = pmt::make_dict();
+    meta = pmt::dict_add(meta, pmt::mp("type"), pmt::mp("dji droneid"));
+    meta = pmt::dict_add(meta, pmt::mp("size"), pmt::mp(m_chunk_size));
 
     const float n = pwr(m_data.data(), 100);
     const float s = pwr(m_data.data() + 2300, 1080);
     const float snr_db = 20 * std::log10((s - n) / n);
 
-    dict = pmt::dict_add(dict, pmt::intern("snr"), pmt::from_float(snr_db));
+    meta = pmt::dict_add(meta, pmt::mp("snr"), pmt::mp(snr_db));
 
     // TODO
     m_t1_samples.at(0) = 0.81f;
@@ -68,14 +68,14 @@ void dual_trigger_impl::send_message() {
     uint64_t t_int = m_total_items;
     if (t_frac > 1.f) { t_frac -= 1.f; m_total_items += 1; }
 
-    dict = pmt::dict_add(dict, pmt::intern("toa_frac"), pmt::from_float(t_frac));
-    dict = pmt::dict_add(dict, pmt::intern("toa_int"), pmt::from_long(t_int));
+    meta = pmt::dict_add(meta, pmt::mp("toa_frac"), pmt::mp(t_frac));
+    meta = pmt::dict_add(meta, pmt::mp("toa_int"), pmt::mp(t_int));
     
     for (int i = 0; i < m_chunk_size; ++i) {
         pmt::c32vector_set(m_pdu_vector, i,  m_data.at(i) );
     }
     
-    pmt::pmt_t msg = pmt::cons(dict, m_pdu_vector);
+    pmt::pmt_t msg = pmt::cons(meta, m_pdu_vector);
     message_port_pub(m_port, msg);
 }
 
