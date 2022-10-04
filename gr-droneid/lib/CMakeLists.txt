@@ -6,6 +6,39 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
+##############################################################################################
+#Find libbladeRF
+##############################################################################################
+if(NOT LIBBLADERF_FOUND)
+  pkg_check_modules (LIBBLADERF_PKG libbladeRF)
+  find_path(LIBBLADERF_INCLUDE_DIRS NAMES libbladeRF.h
+    PATHS
+    ${LIBBLADERF_PKG_INCLUDE_DIRS}
+    /usr/include
+    /usr/local/include
+  )
+
+  find_library(LIBBLADERF_LIBRARIES NAMES bladeRF
+    PATHS
+    ${LIBBLADERF_PKG_LIBRARY_DIRS}
+    /usr/lib
+    /usr/local/lib
+  )
+
+if(LIBBLADERF_INCLUDE_DIRS AND LIBBLADERF_LIBRARIES)
+  set(LIBBLADERF_FOUND TRUE CACHE INTERNAL "libbladeRF found")
+  message(STATUS "Found libbladeRF: ${LIBBLADERF_INCLUDE_DIRS}, ${LIBBLADERF_LIBRARIES}")
+else(LIBBLADERF_INCLUDE_DIRS AND LIBBLADERF_LIBRARIES)
+  set(LIBBLADERF_FOUND FALSE CACHE INTERNAL "libbladeRF found")
+  message(STATUS "libbladeRF not found.")
+endif(LIBBLADERF_INCLUDE_DIRS AND LIBBLADERF_LIBRARIES)
+
+mark_as_advanced(LIBBLADERF_LIBRARIES LIBBLADERF_INCLUDE_DIRS)
+
+endif(NOT LIBBLADERF_FOUND)
+##############################################################################################
+
+
 ########################################################################
 # Setup library
 ########################################################################
@@ -17,6 +50,7 @@ list(APPEND droneid_sources
     single_trigger_impl.cc
     msg_trigger_impl.cc
     save_msg_impl.cc
+    bladerf_lb_impl.cc
 )
 
 set(droneid_sources "${droneid_sources}" PARENT_SCOPE)
@@ -29,10 +63,13 @@ add_library(gnuradio-droneid SHARED ${droneid_sources})
 target_link_libraries(gnuradio-droneid gnuradio::gnuradio-runtime
     gnuradio::gnuradio-blocks
     gnuradio::gnuradio-fft 
-    gnuradio::gnuradio-filter)
+    gnuradio::gnuradio-filter
+    ${LIBBLADERF_LIBRARIES}     
+    )
 target_include_directories(gnuradio-droneid
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
     PUBLIC $<INSTALL_INTERFACE:include>
+    ${LIBBLADERF_INCLUDE_DIRS}
   )
 set_target_properties(gnuradio-droneid PROPERTIES DEFINE_SYMBOL "gnuradio_droneid_EXPORTS")
 

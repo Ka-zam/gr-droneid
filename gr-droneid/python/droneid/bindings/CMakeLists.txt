@@ -33,7 +33,8 @@ list(APPEND droneid_python_files
     print_msg_python.cc
     single_trigger_python.cc
     msg_trigger_python.cc
-    save_msg_python.cc python_bindings.cc)
+    save_msg_python.cc
+    bladerf_lb_python.cc python_bindings.cc)
 
 GR_PYBIND_MAKE_OOT(droneid
    ../../..

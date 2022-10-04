@@ -13,7 +13,7 @@ options:
     hier_block_src_path: '.:'
     id: msg
     max_nouts: '0'
-    output_language: cpp
+    output_language: python
     placement: (0,0)
     qt_qss_theme: ''
     realtime_scheduling: ''
@@ -33,6 +33,18 @@ options:
     state: enabled
 
 blocks:
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: 15360000*1
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [184, 12.0]
+    rotation: 0
+    state: enabled
 - name: blocks_message_debug_0
   id: blocks_message_debug
   parameters:
@@ -56,17 +68,52 @@ blocks:
     maxoutbuf: '0'
     minoutbuf: '0'
     msg: pmt.intern("TEST")
-    period: '1000'
+    period: '10000'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
     coordinate: [160, 156.0]
     rotation: 0
+    state: disabled
+- name: blocks_null_sink_0
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: int
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [560, 344.0]
+    rotation: 0
+    state: true
+- name: droneid_bladerf_lb_0
+  id: droneid_bladerf_lb
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_rate: samp_rate
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [152, 288.0]
+    rotation: 0
     state: true
 
 connections:
 - [blocks_message_strobe_0, strobe, blocks_message_debug_0, print]
+- [droneid_bladerf_lb_0, '0', blocks_null_sink_0, '0']
+- [droneid_bladerf_lb_0, error, blocks_message_debug_0, print]
 
 metadata:
   file_format: 1

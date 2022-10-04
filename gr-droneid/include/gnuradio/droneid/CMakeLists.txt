@@ -15,5 +15,6 @@ install(FILES
     print_msg.h
     single_trigger.h
     msg_trigger.h
-    save_msg.h DESTINATION include/gnuradio/droneid
+    save_msg.h
+    bladerf_lb.h DESTINATION include/gnuradio/droneid
 )

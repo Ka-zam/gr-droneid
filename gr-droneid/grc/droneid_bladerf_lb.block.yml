@@ -1,0 +1,20 @@
+id: droneid_bladerf_lb
+label: bladerf loopback
+flags: throttle
+category: '[Droneid]'
+templates:
+  imports: from gnuradio import droneid
+  make: droneid.bladerf_lb(${samp_rate})
+parameters:
+- id: samp_rate
+  label: Sample rate
+  dtype: int
+outputs:
+- label: out
+  domain: stream
+  dtype: int
+  multiplicity: 1
+- id: error
+  domain: message
+  optional: true
+file_format: 1
