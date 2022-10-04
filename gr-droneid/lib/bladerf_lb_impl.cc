@@ -111,8 +111,13 @@ int bladerf_lb_impl::work(int noutput_items,
 
     m_count += noutput_items;
 
-    uint32_t diff = *(m_uint32buf + noutput_items) - *m_uint32buf;
+    int32_t diff = m_uint32buf[noutput_items - 1] - m_uint32buf[0];
+    if ( diff != noutput_items-1) {
+        pmt::pmt_t msg = pmt::intern("Error: " + std::to_string(diff));
+        message_port_pub(m_port, msg);
+    }
 
+    /*
     if (m_count > 15000000) { 
         m_count = 0;
         std::string s = "diff: " + std::to_string(diff);
@@ -120,15 +125,14 @@ int bladerf_lb_impl::work(int noutput_items,
         //s += std::to_string(*(m_uint32buf + 100)) + "\n";
         pmt::pmt_t msg = pmt::intern(s);
         message_port_pub(m_port, msg);
-        diff += 1;
+        std::cout << "m    : " << m_uint32buf[0] << "\n";
+        std::cout << "m   1: " << m_uint32buf[1] << "\n";
+        std::cout << "m noi: " << m_uint32buf[noutput_items-1] << "\n";
     }
 
+    */
 
     /*
-    if ((int32_t) diff != noutput_items) {
-        pmt::pmt_t msg = pmt::intern("Error: " + std::to_string(diff));
-        message_port_pub(m_port, msg);
-    }
 
     m_count++;
     if (m_count % 1000) {

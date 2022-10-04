@@ -37,7 +37,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: 15360000*1
+    value: 15360000*3
   states:
     bus_sink: false
     bus_source: false
@@ -90,7 +90,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [560, 344.0]
+    coordinate: [456, 288.0]
     rotation: 0
     state: true
 - name: droneid_bladerf_lb_0
