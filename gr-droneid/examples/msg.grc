@@ -37,26 +37,26 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: 15360000*2
+    value: 15360000*4
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [184, 12.0]
+    coordinate: [176, 20.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: samp_rate
   id: variable
   parameters:
     comment: ''
-    value: '20000000'
+    value: '60000000'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
     coordinate: [288, 20.0]
     rotation: 0
-    state: disabled
+    state: enabled
 - name: blocks_message_debug_0
   id: blocks_message_debug
   parameters:
@@ -68,26 +68,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [472, 168.0]
+    coordinate: [480, 192.0]
     rotation: 0
     state: true
-- name: blocks_message_strobe_0
-  id: blocks_message_strobe
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    msg: pmt.intern("TEST")
-    period: '10000'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [160, 156.0]
-    rotation: 0
-    state: disabled
 - name: blocks_null_sink_0
   id: blocks_null_sink
   parameters:
@@ -102,7 +85,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [456, 288.0]
+    coordinate: [304, 160.0]
     rotation: 0
     state: true
 - name: droneid_bladerf_lb_0
@@ -118,12 +101,11 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [152, 288.0]
+    coordinate: [88, 160.0]
     rotation: 0
     state: true
 
 connections:
-- [blocks_message_strobe_0, strobe, blocks_message_debug_0, print]
 - [droneid_bladerf_lb_0, '0', blocks_null_sink_0, '0']
 - [droneid_bladerf_lb_0, error, blocks_message_debug_0, print]
 

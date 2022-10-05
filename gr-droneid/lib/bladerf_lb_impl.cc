@@ -91,6 +91,10 @@ bladerf_lb_impl::bladerf_lb_impl(int samp_rate)
  * Our virtual destructor.
  */
 bladerf_lb_impl::~bladerf_lb_impl() {
+    int status = bladerf_enable_module(m_dev, BLADERF_RX, false);
+    if (status != 0) {
+        fprintf(stderr, "Failed to disable RX: %s\n", bladerf_strerror(status));
+    }    
     volk_free(m_uint32buf);
     volk_free(m_complex32buf);
 }

@@ -27,11 +27,11 @@ private:
     uint64_t m_count;
 
     static constexpr int MAX_CONSECUTIVE_FAILURES = 3;
-    static constexpr int SAMPLES_PER_BUFFER = 4096;
-    static constexpr int NUMBER_OF_BUFFERS = 512;
+    static constexpr int SAMPLES_PER_BUFFER = 1024*32;
+    static constexpr int NUMBER_OF_BUFFERS = 1024;
     static constexpr int NUMBER_OF_TRANSFERS = 32;
-    static constexpr int STREAM_TIMEOUT_MS = 3000;
-    static constexpr int SYNC_TIMEOUT_MS = 5000;
+    static constexpr int STREAM_TIMEOUT_MS = 6000;
+    static constexpr int SYNC_TIMEOUT_MS = 9000;
 public:
     bladerf_lb_impl(int samp_rate);
     ~bladerf_lb_impl();
