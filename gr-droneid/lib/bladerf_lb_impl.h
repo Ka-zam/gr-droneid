@@ -22,18 +22,16 @@ private:
     struct bladerf* m_dev;
     int m_samp_rate;
     uint32_t* m_uint32buf;
+    gr_complex* m_complex32buf;
     int m_failures;
-    int m_count;
+    uint64_t m_count;
 
-    /* Scaling factor used when converting from int16_t to float */
-    static constexpr float SCALING_FACTOR = 2048.0f;
     static constexpr int MAX_CONSECUTIVE_FAILURES = 3;
     static constexpr int SAMPLES_PER_BUFFER = 4096;
     static constexpr int NUMBER_OF_BUFFERS = 512;
     static constexpr int NUMBER_OF_TRANSFERS = 32;
     static constexpr int STREAM_TIMEOUT_MS = 3000;
-    static constexpr int EXT_CLOCK_DWELL_US = 2000;    
-
+    static constexpr int SYNC_TIMEOUT_MS = 5000;
 public:
     bladerf_lb_impl(int samp_rate);
     ~bladerf_lb_impl();

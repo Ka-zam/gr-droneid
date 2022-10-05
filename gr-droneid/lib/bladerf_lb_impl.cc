@@ -22,7 +22,7 @@ bladerf_lb::sptr bladerf_lb::make(int samp_rate)
  */
 bladerf_lb_impl::bladerf_lb_impl(int samp_rate)
     : gr::sync_block("bladerf_lb",
-    gr::io_signature::make(0,0,0), gr::io_signature::make(1,1,sizeof(int32_t))),
+    gr::io_signature::make(0, 0, 0), gr::io_signature::make(1, 1, sizeof(gr_complex))),
     m_port(pmt::mp("error")),
     m_samp_rate(samp_rate),
     m_failures(0),
@@ -31,6 +31,7 @@ bladerf_lb_impl::bladerf_lb_impl(int samp_rate)
     message_port_register_out(m_port);
     set_max_noutput_items(SAMPLES_PER_BUFFER);
     m_uint32buf = (uint32_t*) volk_malloc(SAMPLES_PER_BUFFER * sizeof(uint32_t), volk_get_alignment());
+    m_complex32buf = (gr_complex*) volk_malloc(SAMPLES_PER_BUFFER * sizeof(gr_complex), volk_get_alignment());
    /*
       bladeRF setup
     */
@@ -91,13 +92,15 @@ bladerf_lb_impl::bladerf_lb_impl(int samp_rate)
  */
 bladerf_lb_impl::~bladerf_lb_impl() {
     volk_free(m_uint32buf);
+    volk_free(m_complex32buf);
 }
 
 int bladerf_lb_impl::work(int noutput_items,
     gr_vector_const_void_star& input_items,
     gr_vector_void_star& output_items)
 {
-    int status = bladerf_sync_rx(m_dev, (void*) m_uint32buf, noutput_items, NULL, STREAM_TIMEOUT_MS);
+    //                                                       one sample = two int16_t
+    int status = bladerf_sync_rx(m_dev, (void*) m_uint32buf, noutput_items, nullptr, SYNC_TIMEOUT_MS);
     if (status) {
         fprintf(stderr, "%s: %s\n", "bladeRF stream error", bladerf_strerror(status));
         m_failures++;
@@ -111,40 +114,15 @@ int bladerf_lb_impl::work(int noutput_items,
 
     m_count += noutput_items;
 
-    int32_t diff = m_uint32buf[noutput_items - 1] - m_uint32buf[0];
-    if ( diff != noutput_items-1) {
-        pmt::pmt_t msg = pmt::intern("Error: " + std::to_string(diff));
+    auto out = static_cast<gr_complex*>(output_items[0]);
+    volk_16i_s32f_convert_32f((float*) m_complex32buf, (int16_t*) m_uint32buf, 2048.f, 2 * noutput_items);
+    memcpy(out, m_complex32buf, noutput_items * sizeof(gr_complex));
+
+    int32_t diff = (m_uint32buf[noutput_items - 1] - m_uint32buf[0]) - (noutput_items - 1);
+    if (diff!=0) {
+        pmt::pmt_t msg = pmt::intern("Dropped " + std::to_string(diff) + "samples.");
         message_port_pub(m_port, msg);
     }
-
-    /*
-    if (m_count > 15000000) { 
-        m_count = 0;
-        std::string s = "diff: " + std::to_string(diff);
-        s += std::to_string(*m_uint32buf) + "\n";
-        //s += std::to_string(*(m_uint32buf + 100)) + "\n";
-        pmt::pmt_t msg = pmt::intern(s);
-        message_port_pub(m_port, msg);
-        std::cout << "m    : " << m_uint32buf[0] << "\n";
-        std::cout << "m   1: " << m_uint32buf[1] << "\n";
-        std::cout << "m noi: " << m_uint32buf[noutput_items-1] << "\n";
-    }
-
-    */
-
-    /*
-
-    m_count++;
-    if (m_count % 1000) {
-        std::cout << "uint32_t: " << *m_uint32buf << "  +100: " << *(m_uint32buf + 100) << "\n";
-        pmt::pmt_t msg = pmt::intern("Got called with noutput_items: " + std::to_string(noutput_items));
-        message_port_pub(m_port, msg);
-        m_count = 0;
-    }
-    */
-
-    auto out = static_cast<uint32_t*>(output_items[0]);
-    memcpy(out, m_uint32buf, noutput_items * sizeof(uint32_t));
     return noutput_items;
 }
 

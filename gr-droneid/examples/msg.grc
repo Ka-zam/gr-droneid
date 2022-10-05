@@ -37,7 +37,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: 15360000*3
+    value: 15360000*2
   states:
     bus_sink: false
     bus_source: false
@@ -45,6 +45,18 @@ blocks:
     coordinate: [184, 12.0]
     rotation: 0
     state: enabled
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: '20000000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [288, 20.0]
+    rotation: 0
+    state: disabled
 - name: blocks_message_debug_0
   id: blocks_message_debug
   parameters:
@@ -84,7 +96,7 @@ blocks:
     bus_structure_sink: '[[0,],]'
     comment: ''
     num_inputs: '1'
-    type: int
+    type: complex
     vlen: '1'
   states:
     bus_sink: false

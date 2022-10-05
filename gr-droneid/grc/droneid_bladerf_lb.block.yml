@@ -12,7 +12,7 @@ parameters:
 outputs:
 - label: out
   domain: stream
-  dtype: int
+  dtype: complex
   multiplicity: 1
 - id: error
   domain: message
