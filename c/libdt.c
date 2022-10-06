@@ -1,7 +1,7 @@
 /*
 
-Compile:
-gcc -g -shared -o libdt.so -fPIC libdt.c  -I/usr/local/include -L/usr/local/lib  -lturbofec
+Install:
+gcc -g -shared -o libdt.so -fPIC libdt.c -I/usr/local/include -L/usr/local/lib -lturbofec
 sudo cp libdt.so /usr/local/lib
 sudo ldconfig
 
@@ -15,6 +15,7 @@ sudo ldconfig
 #include <turbofec/rate_match.h>
 #include <turbofec/turbo.h>
 
+// Forward constants
 #define DATA_LEN      (176)
 #define DJI_LEN       (91)
 #define SCRAP_LEN     (82)
@@ -123,6 +124,7 @@ dt_turbo_fwd(uint8_t* out, uint8_t* msg) {
 	//memset(data, 0x00, DATA_LEN);
 	memcpy(data, msg, DATA_LEN);
 
+    // Add CRC to payload
 	uint32_t res = crc(data, DJI_LEN + SCRAP_LEN);
 	data[DATA_LEN - 3] = (res >> 16) & 0xff;
 	data[DATA_LEN - 2] = (res >>  8) & 0xff;

@@ -402,7 +402,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1184, 396.0]
+    coordinate: [1200, 404.0]
     rotation: 0
     state: true
 - name: droneid_print_msg_0
@@ -415,7 +415,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1376, 400.0]
+    coordinate: [1416, 408.0]
     rotation: 0
     state: true
 - name: droneid_single_trigger_0

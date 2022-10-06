@@ -49,7 +49,6 @@ def zc2(sr):
     return np.conj(zc)
 
 def create_zc_sequence(samp_rate, symbol=4):
-    # TODO: This doesn't seem to work for 30.72Msps
     # DJI OFDM settings
     if samp_rate < 15.36e6:
         return None
