@@ -63,28 +63,28 @@ def deframe(frame):
 def scramble(frame):
     if len(frame) != 7200:
         return None
-    frame = frame.reshape((6,len(frame)//6))
+    frame = frame.reshape((6, len(frame)//6))
 
     x1_init = np.array([1]+[0,]*30)
 
     x2_init = np.array([0,0,1,0,0,1,0,0,0,1,1,0,1,0,0,0,1,0,1,0,1,1,0,0,1,1,1,1,0,0,0], dtype=np.uint8)
     x2_init = x2_init[::-1]
 
-    chk = len(x1_init) - 1
+    chk = len(x1_init)
     
     M_pn = len(frame)
     Nc = 1600 # As defined in 36.211 7.2
 
-    x1 = np.zeros((1, Nc + M_pn + len(x1_init)), dtype=np.uint8)
-    x2 = np.zeros((1, Nc + M_pn + len(x2_init)), dtype=np.uint8)
-    res = np.zeros((1,M_pn), dtype=np.uint8)
+    x1 = np.zeros(Nc + M_pn + len(x1_init), dtype=np.uint8)
+    x2 = np.zeros(Nc + M_pn + len(x2_init), dtype=np.uint8)
+    res = np.zeros(M_pn, dtype=np.uint8)
 
     x1[0:chk] = x1_init
     x2[0:chk] = x2_init
 
     for idx,_ in enumerate(range(M_pn + Nc)):
-        x1[chk + 1 + idx] = (x1[idx + 2] + x1[idx - 1]) % 2
-        x2[chk + 1 + idx] = (x2[idx + 2] + x2[idx + 1] + x2[idx] + x2[idx - 1]) % 2
+        x1[chk + idx] = (x1[idx + 2] + x1[idx - 1]) % 2
+        x2[chk + idx] = (x2[idx + 2] + x2[idx + 1] + x2[idx] + x2[idx - 1]) % 2
 
     for idx,_ in enumerate(range(M_pn)):
         res[idx] = (x1[idx + Nc] + x2[idx + Nc]) % 2
