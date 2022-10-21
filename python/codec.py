@@ -6,9 +6,9 @@ from crcmod import mkCrcFun
 
 
 libdt = ct.cdll.LoadLibrary("libdt.so")
-libdt.dt_turbo_fwd.restype = ct.c_uint32
+libdt.dt_turbo_fwd.restype  = ct.c_uint32
 libdt.dt_turbo_fwd.argtypes = [ct.POINTER(ct.c_uint8), ct.POINTER(ct.c_uint8)]
-libdt.dt_turbo_rev.restype = ct.c_uint64
+libdt.dt_turbo_rev.restype  = ct.c_uint64
 libdt.dt_turbo_rev.argtypes = [ct.POINTER(ct.c_uint8), ct.POINTER(ct.c_uint8)]
 
 

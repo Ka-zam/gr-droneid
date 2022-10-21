@@ -1,7 +1,7 @@
 /*
 
 Install:
-gcc -g -shared -o libdt.so -fPIC libdt.c -I/usr/local/include -L/usr/local/lib -lturbofec
+gcc -g -shared -o libdt.so -O2 -march=native -fPIC libdt.c -I/usr/local/include -L/usr/local/lib -lturbofec
 sudo cp libdt.so /usr/local/lib
 sudo ldconfig
 
