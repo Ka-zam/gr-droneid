@@ -4,6 +4,9 @@ import ctypes as ct
 from random import sample
 from crcmod import mkCrcFun
 
+# Poly, Initial = 0x00, No reflect, FinalXOR = 0x00
+# 1 added from the left to poly
+compute_crc = mkCrcFun(0x1864cfb, 0x00, False, 0x00) # returns integer
 
 libdt = ct.cdll.LoadLibrary("libdt.so")
 libdt.dt_turbo_fwd.restype  = ct.c_uint32
@@ -11,16 +14,56 @@ libdt.dt_turbo_fwd.argtypes = [ct.POINTER(ct.c_uint8), ct.POINTER(ct.c_uint8)]
 libdt.dt_turbo_rev.restype  = ct.c_uint64
 libdt.dt_turbo_rev.argtypes = [ct.POINTER(ct.c_uint8), ct.POINTER(ct.c_uint8)]
 
+droneid = {}
+droneid["carrier_spacing"]  = 15.0e3 # Hz
+droneid["data_carriers"]    = 600
+droneid["symbols"]          = 9
+droneid["zc_root_symbol_4"] = 600
+droneid["zc_root_symbol_6"] = 147
+droneid["cp_seq"]           = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
+
+def bits_to_qpsk(bits):
+    if len(bits) % 2 != 0:
+        return None
+
+    symbols = np.ndarray(len(bits) // 2, dtype=np.complex64)
+
+    s = 0
+    for idx in range(0, len(bits), 2):
+        b = (bits[idx], bits[idx + 1]) 
+        if b == (0, 0):
+            symbols[s] = +1. + 1.j
+        elif b == (0, 1):
+            symbols[s] = +1. - 1.j
+        elif b == (1, 0):
+            symbols[s] = -1. + 1.j
+        else: #b == (1, 1)
+            symbols[s] = -1. - 1.j
+        s += 1                       
+    return np.sqrt(.5) * symbols
+
+def ofdm_symbols(bits):
+    #ofdm_symbols = np
+    for s in range(droneid["symbols"]):
+        pass
+    return None
+
+
+def fft_size(samp_rate):
+    return int(np.round(samp_rate / droneid["carrier_spacing"]))
+
+def short_cp_size(samp_rate):
+    return int(np.round(samp_rate * 0.0000046875))
+
+def long_cp_size(samp_rate):
+    return int(np.round(samp_rate / 192000.0))
 
 def dji_crc(data):
-    # Poly, Initial = 0x00, No reflect, FinalXOR = 0x00
-    # 1 added from the left to poly
-    compute_crc = mkCrcFun(0x1864cfb, 0x00, False, 0x00) # returns integer
     res = compute_crc(data)
     crc = np.ndarray(3, dtype=np.uint8)
-    crc[0] = (res >> 16) & 0xff;
-    crc[1] = (res >>  8) & 0xff;
-    crc[2] = (res >>  0) & 0xff;
+    crc[0] = ((res >> 16) & 0xff);
+    crc[1] = ((res >>  8) & 0xff);
+    crc[2] = ((res >>  0) & 0xff);
     return crc
 
 def encode(msg_dict=None):
@@ -60,46 +103,54 @@ def deframe(frame):
     crc = res & 0xffffffff    
     return msg
 
-def scramble(frame):
-    if len(frame) != 7200:
+def scramble(bits, gs=None):
+    M_pn = 7200
+    if len(bits) != M_pn:
         return None
-    frame = frame.reshape((6, len(frame)//6))
+    elif gs is None:
+        return None
+    else:
+        for idx in range(M_pn):
+            bits[idx] ^= gs[idx]
+        return bits
 
-    x1_init = np.array([1]+[0,]*30)
+def golden_sequence(x2_init=None):
+    x1_init = np.array([1]+[0,]*30, dtype=np.uint8)
 
-    x2_init = np.array([0,0,1,0,0,1,0,0,0,1,1,0,1,0,0,0,1,0,1,0,1,1,0,0,1,1,1,1,0,0,0], dtype=np.uint8)
-    x2_init = x2_init[::-1]
+    if x2_init is None:
+        # 0x12345678 in reverse order. Magic.
+        x2_init = np.array([0,0,1,0,0,1,0,0,0,1,1,0,1,0,0,0,1,0,1,0,1,1,0,0,1,1,1,1,0,0,0], dtype=np.uint8)
+        x2_init = x2_init[::-1]
+    elif len(x2_init) != len(x1_init):
+        return None
 
-    chk = len(x1_init)
-    
-    M_pn = len(frame)
-    Nc = 1600 # As defined in 36.211 7.2
+    reg_len = len(x1_init)
+    M_pn = 7200 # As defined in 36.211 7.2
+    Nc = 1600 
 
     x1 = np.zeros(Nc + M_pn + len(x1_init), dtype=np.uint8)
     x2 = np.zeros(Nc + M_pn + len(x2_init), dtype=np.uint8)
-    res = np.zeros(M_pn, dtype=np.uint8)
+    gs = np.zeros(M_pn, dtype=np.uint8)
 
-    x1[0:chk] = x1_init
-    x2[0:chk] = x2_init
+    x1[:reg_len] = x1_init
+    x2[:reg_len] = x2_init
 
-    for idx,_ in enumerate(range(M_pn + Nc)):
-        x1[chk + idx] = (x1[idx + 2] + x1[idx - 1]) % 2
-        x2[chk + idx] = (x2[idx + 2] + x2[idx + 1] + x2[idx] + x2[idx - 1]) % 2
+    for idx in range(M_pn + Nc):
+        x1[idx + reg_len] = (x1[idx + 3] + x1[idx]) % 2
+        x2[idx + reg_len] = (x2[idx + 3] + x2[idx + 2] + x2[idx + 1] + x2[idx]) % 2
 
-    for idx,_ in enumerate(range(M_pn)):
-        res[idx] = (x1[idx + Nc] + x2[idx + Nc]) % 2
-    return res
-
+    for idx in range(M_pn):
+        gs[idx] = (x1[idx + Nc] + x2[idx + Nc]) % 2
+    return gs
 
 def symbol_mapping(frame):
     return None
-
 
 # To modulate:
 #  1. Encode 91 bytes from drone information              WAIT
 #  2. Compute and add CRC                                 DONE
 #  3. Turbo encode and rate match                         DONE
-#  4. Run scrambler                                       TODO
+#  4. Run scrambler                                       DONE
 #  5. Create OFDM symbols                                 TODO
 #     a. Generate QPSK symbols                            TODO
 #     b. Convert to time domain                           TODO
@@ -109,6 +160,14 @@ def symbol_mapping(frame):
 
 
 if __name__ == '__main__':
+    gs = golden_sequence()
+    s = ""
+    for i in range(32):
+        s += "{:2d} ".format(gs[i])
+    print(s)
+    exit()
+
+
     frame = np.array([ 88,  16,   2,   0,   0,   0,   0,  48,  49,  50,  51,  52,  53,\
         54,  55,  56,  57,  97,  98,  99, 100,   0,   0,   0,   0,   0,\
          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,\
