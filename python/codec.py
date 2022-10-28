@@ -23,13 +23,14 @@ droneid["zc_root_symbol_6"] = 147
 droneid["cp_seq"]           = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
 
 def bits_to_qpsk(bits):
-    if len(bits) % 2 != 0:
+    N = len(bits)
+    if N % 2 != 0:
         return None
 
-    symbols = np.ndarray(len(bits) // 2, dtype=np.complex64)
+    symbols = np.ndarray(N // 2, dtype=np.complex128)
 
     s = 0
-    for idx in range(0, len(bits), 2):
+    for idx in range(0, N, 2):
         b = (bits[idx], bits[idx + 1]) 
         if b == (0, 0):
             symbols[s] = +1. + 1.j
@@ -37,17 +38,30 @@ def bits_to_qpsk(bits):
             symbols[s] = +1. - 1.j
         elif b == (1, 0):
             symbols[s] = -1. + 1.j
-        else: #b == (1, 1)
+        else:#b == (1, 1)
             symbols[s] = -1. - 1.j
         s += 1                       
     return np.sqrt(.5) * symbols
 
-def ofdm_symbols(bits):
-    #ofdm_symbols = np
-    for s in range(droneid["symbols"]):
+def ofdm_symbols(qpsk_symbols, samp_rate):
+    N_sym = droneid["symbols"]
+    N_fft = fft_size(samp_rate)
+    ofdm_symbols = np.ndarray((N_sym, N_fft), dtype=np.complex128)
+
+    for s in range(N_sym):
         pass
     return None
 
+def data_indices(samp_rate):
+    N_c = droneid["data_carriers"]
+    N_fft  =fft_size(samp_rate)
+    idx_dc = N_fft // 2
+    N_left = N_c // 2
+    N_right = N_c // 2
+    # Build a list of indices, DC excluded
+    indices =  [i for i in range(idx_dc - N_left, idx_dc)              ]
+    indices += [i for i in range(idx_dc + 1     , idx_dc + N_right + 1)]
+    return indices
 
 def fft_size(samp_rate):
     return int(np.round(samp_rate / droneid["carrier_spacing"]))
@@ -100,7 +114,7 @@ def deframe(frame):
     res = libdt.dt_turbo_rev(msg.ctypes.data_as(ct.POINTER(ct.c_uint8)), frame.ctypes.data_as(ct.POINTER(ct.c_uint8)))
 
     status = np.int32(np.uint32(res >> 32))
-    crc = res & 0xffffffff    
+    crc = res & 0xffffffff
     return msg
 
 def scramble(bits, gs=None):

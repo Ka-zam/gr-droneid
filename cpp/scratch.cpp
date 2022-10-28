@@ -3,11 +3,11 @@
 #include <inttypes.h>
 
 /*
-g++ -o scratch scratch.cpp
+g++ -o scratch -std=c++17 -O2 scratch.cpp
 */
 void golden_sequence(int8_t *gs) {
-  int nc = 1600;
-  int l = 7200;
+  constexpr int nc = 1600;
+  constexpr int l = 7200;
   int8_t x1[l+nc+31] = {1};
   int8_t x2[l+nc+31] = {0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0};
   for(int i=0;i<l+nc;i++) {
@@ -33,7 +33,7 @@ int main(){
 
 	golden_sequence(gs);
 
-	for (int i = 0; i < 32; ++i) {
+	for (int i = 0; i <= 32; ++i) {
 		std::cout << static_cast<int>(gs[i]) << " ";
 	}
 	std::cout << std::endl;

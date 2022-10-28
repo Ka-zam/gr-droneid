@@ -187,8 +187,7 @@ dt_turbo_rev(uint8_t* out, uint8_t* msg) {
 
 	int8_t* soft_msg = (int8_t*) malloc(TURBO_OUT_LEN);
 	for (int i = 0; i < TURBO_OUT_LEN; ++i)	{
-		soft_msg[i] = ((*msg) == 0x00) ? -63 : 63;
-		msg++;
+		soft_msg[i] = ((*msg++) == 0x00) ? -63 : 63;
 	}
 
     // Setup IO sizes and buffers
@@ -214,7 +213,6 @@ dt_turbo_rev(uint8_t* out, uint8_t* msg) {
 }
 
 /*
-
 int main() {
 	dt_allocate();
 
