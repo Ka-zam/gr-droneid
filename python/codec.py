@@ -20,7 +20,7 @@ droneid["data_carriers"]    = 600
 droneid["symbols"]          = 9
 droneid["zc_root_symbol_4"] = 600
 droneid["zc_root_symbol_6"] = 147
-droneid["cp_seq"]           = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
+droneid["cp_seq"]           = [1, 0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
 
 def bits_to_qpsk(bits):
     N = len(bits)
@@ -32,25 +32,63 @@ def bits_to_qpsk(bits):
     s = 0
     for idx in range(0, N, 2):
         b = (bits[idx], bits[idx + 1]) 
-        if b == (0, 0):
+        if    b == (0, 0):
             symbols[s] = +1. + 1.j
-        elif b == (0, 1):
+        elif  b == (0, 1):
             symbols[s] = +1. - 1.j
-        elif b == (1, 0):
+        elif  b == (1, 0):
             symbols[s] = -1. + 1.j
         else:#b == (1, 1)
             symbols[s] = -1. - 1.j
         s += 1                       
     return np.sqrt(.5) * symbols
 
-def ofdm_symbols(qpsk_symbols, samp_rate):
+def baseband(qpsk_symbols, samp_rate):
     N_sym = droneid["symbols"]
+    L_sym = droneid["data_carriers"]
     N_fft = fft_size(samp_rate)
-    ofdm_symbols = np.ndarray((N_sym, N_fft), dtype=np.complex128)
+
+    ofdm_symbols = np.zeros((N_sym, L_sym), dtype=np.complex128)
+    ofdm_symbols_freq = np.zeros((N_sym, N_fft), dtype=np.complex128)
+    ofdm_symbols_time = np.zeros((N_sym, N_fft), dtype=np.complex128)
+
+    idx = 0
+    for s in range(N_sym):
+        if s == 3 or s == 5: #Symbol #4 and #6 carries ZC data
+            pass
+        else:
+            ofdm_symbols[s, :] = qpsk_symbols[idx: idx + L_sym]
+            idx += L_sym
+
+    data_idx = data_indices(samp_rate)
 
     for s in range(N_sym):
-        pass
-    return None
+        if s == 3: # Symbol #4
+            ofdm_symbols_time[s, :] = create_zc_sequence(samp_rate, symbol=4)
+        if s == 5: # Symbol #6
+            ofdm_symbols_time[s, :] = create_zc_sequence(samp_rate, symbol=6)
+        ofdm_symbols_freq[s, data_idx] = ofdm_symbols[s, :]
+        s_t = np.fft.ifft( np.fft.fftshift( ofdm_symbols_freq[s, :] ))
+        s_t /= N_fft
+        ofdm_symbols_time[s, :] = s_t
+
+    cp_l = long_cp_size(samp_rate)
+    cp_s = short_cp_size(samp_rate)
+    cp_schedule = [cp_l if x == 1 else cp_s for x in droneid["cp_seq"]]
+
+    bb_len  = sum(cp_schedule)
+    bb_len += N_fft * len(cp_schedule)
+    iq = np.zeros( bb_len, dtype=np.complex128)
+
+    # Add cyclic prefix
+    idx = 0
+    for s in range(N_sym):
+        cp_len = cp_schedule[s]
+        cp = ofdm_symbols_time[s, -cp_len:]
+        sym = ofdm_symbols_time[s, :]
+        iq[idx: idx + cp_len + N_fft] = np.concatenate([cp, sym])
+        idx += cp_len + N_fft
+    return iq
 
 def data_indices(samp_rate):
     N_c = droneid["data_carriers"]
@@ -62,6 +100,32 @@ def data_indices(samp_rate):
     indices =  [i for i in range(idx_dc - N_left, idx_dc)              ]
     indices += [i for i in range(idx_dc + 1     , idx_dc + N_right + 1)]
     return indices
+
+def create_zc_sequence(samp_rate, symbol=4):
+    # DJI OFDM settings
+    if samp_rate < 15.36e6:
+        return None
+
+    if symbol==4:
+        root = droneid["zc_root_symbol_4"]
+    elif symbol==6:
+        root = droneid["zc_root_symbol_6"]
+    else:
+        return None
+
+    n = fft_size(samp_rate)
+    guard_carriers = n - droneid["data_carriers"]
+    lguard = guard_carriers // 2
+
+    zc_w = np.zeros(n, dtype=np.complex128)
+
+    for idx,_ in enumerate(range(droneid["data_carriers"] + 1)):
+        x = -np.pi * root * idx * (idx + 1.0) / (droneid["data_carriers"] + 1)
+        zc_w[idx + lguard] = np.exp(1j * x)
+    zc_w[n // 2] = 0.0 # Set DC to 0
+    zc_w = np.fft.fftshift(zc_w)
+    zc = np.fft.ifft(zc_w)
+    return zc #np.conj(zc)    
 
 def fft_size(samp_rate):
     return int(np.round(samp_rate / droneid["carrier_spacing"]))
@@ -132,7 +196,7 @@ def golden_sequence(x2_init=None):
     x1_init = np.array([1]+[0,]*30, dtype=np.uint8)
 
     if x2_init is None:
-        # 0x12345678 in reverse order. Magic.
+        # 0x12345678 in reverse order. Magic. Leave out leading 0.
         x2_init = np.array([0,0,1,0,0,1,0,0,0,1,1,0,1,0,0,0,1,0,1,0,1,1,0,0,1,1,1,1,0,0,0], dtype=np.uint8)
         x2_init = x2_init[::-1]
     elif len(x2_init) != len(x1_init):
@@ -166,7 +230,7 @@ def symbol_mapping(frame):
 #  3. Turbo encode and rate match                         DONE
 #  4. Run scrambler                                       DONE
 #  5. Create OFDM symbols                                 TODO
-#     a. Generate QPSK symbols                            TODO
+#     a. Generate QPSK symbols                            DONE
 #     b. Convert to time domain                           TODO
 #     c. Set symbol 4 and 6 to required ZC sequences      DONE
 #     d. Add cyclic prefix                                TODO

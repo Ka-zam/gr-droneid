@@ -5,7 +5,7 @@ droneid["carrier_spacing"]  = 15.0e3 # Hz
 droneid["data_carriers"]    = 600
 droneid["zc_root_symbol_4"] = 600
 droneid["zc_root_symbol_6"] = 147
-droneid["cp_seq"]           = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
+droneid["cp_seq"]           = [1, 0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
 
 def fft_size(samp_rate):
     return int(np.round(samp_rate / droneid["carrier_spacing"]))
