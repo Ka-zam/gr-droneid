@@ -17,10 +17,11 @@ libdt.dt_turbo_rev.argtypes = [ct.POINTER(ct.c_uint8), ct.POINTER(ct.c_uint8)]
 droneid = {}
 droneid["carrier_spacing"]  = 15.0e3 # Hz
 droneid["data_carriers"]    = 600
-droneid["symbols"]          = 9
+droneid["symbols"]          = 8
 droneid["zc_root_symbol_4"] = 600
 droneid["zc_root_symbol_6"] = 147
-droneid["cp_seq"]           = [1, 0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
+#droneid["cp_seq"]           = [1, 0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
+droneid["cp_seq"]           = [0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
 
 def bits_to_qpsk(bits):
     N = len(bits)
@@ -54,7 +55,7 @@ def baseband(qpsk_symbols, samp_rate):
 
     idx = 0
     for s in range(N_sym):
-        if s == 3 or s == 5: #Symbol #4 and #6 carries ZC data
+        if s == 2 or s == 4: #Symbol #3 and #5 carries ZC data
             pass
         else:
             ofdm_symbols[s, :] = qpsk_symbols[idx: idx + L_sym]
@@ -63,21 +64,22 @@ def baseband(qpsk_symbols, samp_rate):
     data_idx = data_indices(samp_rate)
 
     for s in range(N_sym):
-        if s == 3: # Symbol #4
-            ofdm_symbols_time[s, :] = create_zc_sequence(samp_rate, symbol=4)
-        if s == 5: # Symbol #6
-            ofdm_symbols_time[s, :] = create_zc_sequence(samp_rate, symbol=6)
-        ofdm_symbols_freq[s, data_idx] = ofdm_symbols[s, :]
-        s_t = np.fft.ifft( np.fft.fftshift( ofdm_symbols_freq[s, :] ))
-        s_t /= N_fft
-        ofdm_symbols_time[s, :] = s_t
+        if   s == 2: # Symbol #3
+            ofdm_symbols_time[s, :] = create_zc_sequence(samp_rate, symbol=3)
+        elif s == 4: # Symbol #5
+            ofdm_symbols_time[s, :] = create_zc_sequence(samp_rate, symbol=5)
+        else:        # OFDM symbols carrying data
+            ofdm_symbols_freq[s, data_idx] = ofdm_symbols[s, :]
+            s_t = np.fft.ifft( np.fft.fftshift( ofdm_symbols_freq[s, :] ))
+            #s_t /= N_fft
+            ofdm_symbols_time[s, :] = s_t
 
     cp_l = long_cp_size(samp_rate)
     cp_s = short_cp_size(samp_rate)
     cp_schedule = [cp_l if x == 1 else cp_s for x in droneid["cp_seq"]]
 
     bb_len  = sum(cp_schedule)
-    bb_len += N_fft * len(cp_schedule)
+    bb_len += N_fft * droneid["symbols"]
     iq = np.zeros( bb_len, dtype=np.complex128)
 
     # Add cyclic prefix
@@ -101,14 +103,14 @@ def data_indices(samp_rate):
     indices += [i for i in range(idx_dc + 1     , idx_dc + N_right + 1)]
     return indices
 
-def create_zc_sequence(samp_rate, symbol=4):
+def create_zc_sequence(samp_rate, symbol=3):
     # DJI OFDM settings
     if samp_rate < 15.36e6:
         return None
 
-    if symbol==4:
+    if symbol==3 or symbol==4:
         root = droneid["zc_root_symbol_4"]
-    elif symbol==6:
+    elif symbol==5 or symbol==6:
         root = droneid["zc_root_symbol_6"]
     else:
         return None
@@ -164,14 +166,14 @@ def encode(msg_dict=None):
     crc = dji_crc(msg)
     return np.concatenate([msg, crc]) # 176 CRC augmented payload bytes
 
-def frame(msg):
+def turbo_fwd(msg):
     if len(msg) != 176:
         return None
     frm = np.zeros(7200, dtype=np.uint8)
-    res = libdt.dt_turbo_fwd(frame.ctypes.data_as(ct.POINTER(ct.c_uint8)), msg.ctypes.data_as(ct.POINTER(ct.c_uint8)))
+    res = libdt.dt_turbo_fwd(frm.ctypes.data_as(ct.POINTER(ct.c_uint8)), msg.ctypes.data_as(ct.POINTER(ct.c_uint8)))
     return frm
 
-def deframe(frame):
+def turbo_rev(frame):
     if len(frame) != 7200:
         return None
     msg = np.ndarray(176, dtype=np.uint8)
@@ -220,9 +222,6 @@ def golden_sequence(x2_init=None):
     for idx in range(M_pn):
         gs[idx] = (x1[idx + Nc] + x2[idx + Nc]) % 2
     return gs
-
-def symbol_mapping(frame):
-    return None
 
 # To modulate:
 #  1. Encode 91 bytes from drone information              WAIT
