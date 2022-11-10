@@ -90,7 +90,7 @@ def baseband(qpsk_symbols, samp_rate):
         sym = ofdm_symbols_time[s, :]
         iq[idx: idx + cp_len + N_fft] = np.concatenate([cp, sym])
         idx += cp_len + N_fft
-    return iq
+    return iq / np.max(np.abs(iq))
 
 def data_indices(samp_rate):
     N_c = droneid["data_carriers"]
