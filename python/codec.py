@@ -23,6 +23,14 @@ droneid["zc_root_symbol_6"] = 147
 #droneid["cp_seq"]           = [1, 0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
 droneid["cp_seq"]           = [0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
 
+def msg_to_bb(msg_dict=None, samp_rate=15.36e6):
+    msg = encode(msg_dict)
+    bits = turbo_fwd(msg)
+    gs = golden_sequence()
+    bits = scramble(bits, gs)
+    syms = bits_to_qpsk(bits)
+    return baseband(syms, samp_rate)
+
 def bits_to_qpsk(bits):
     N = len(bits)
     if N % 2 != 0:
@@ -228,13 +236,11 @@ def golden_sequence(x2_init=None):
 #  2. Compute and add CRC                                 DONE
 #  3. Turbo encode and rate match                         DONE
 #  4. Run scrambler                                       DONE
-#  5. Create OFDM symbols                                 TODO
+#  5. Create OFDM symbols                                 DONE
 #     a. Generate QPSK symbols                            DONE
-#     b. Convert to time domain                           TODO
+#     b. Convert to time domain                           DONE
 #     c. Set symbol 4 and 6 to required ZC sequences      DONE
-#     d. Add cyclic prefix                                TODO
-
-
+#     d. Add cyclic prefix                                DONE
 
 if __name__ == '__main__':
     gs = golden_sequence()
@@ -244,7 +250,6 @@ if __name__ == '__main__':
     print(s)
     exit()
 
-
     frame = np.array([ 88,  16,   2,   0,   0,   0,   0,  48,  49,  50,  51,  52,  53,\
         54,  55,  56,  57,  97,  98,  99, 100,   0,   0,   0,   0,   0,\
          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,\
@@ -252,6 +257,7 @@ if __name__ == '__main__':
          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,\
          0,   0,   0,  19,   0,   0,   0,   0,   0,   0,   0,   0,   0,\
          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  76, 201], dtype=np.uint8)
+    
     frame.tofile("frame.orig.bin")
     out = np.zeros(7200, dtype=np.uint8)
 
