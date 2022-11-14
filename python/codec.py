@@ -3,6 +3,7 @@ import numpy as np
 import ctypes as ct
 from random import sample
 from crcmod import mkCrcFun
+from struct import pack
 
 # Poly, Initial = 0x00, No reflect, FinalXOR = 0x00
 # 1 added from the left to poly
@@ -22,6 +23,7 @@ droneid["zc_root_symbol_4"] = 600
 droneid["zc_root_symbol_6"] = 147
 #droneid["cp_seq"]           = [1, 0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
 droneid["cp_seq"]           = [0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
+droneid["models"]           = { 16: "Mavic Pro", 41: "Mavic 2", 61: "DJI FPV", 63: "Mini 2", 68: "Mavic 3" }
 
 def msg_to_bb(msg_dict=None, samp_rate=15.36e6):
     msg = encode(msg_dict)
@@ -148,11 +150,77 @@ def long_cp_size(samp_rate):
 
 def dji_crc(data):
     res = compute_crc(data)
-    crc = np.ndarray(3, dtype=np.uint8)
+    crc = bytearray(3)
     crc[0] = ((res >> 16) & 0xff);
     crc[1] = ((res >>  8) & 0xff);
     crc[2] = ((res >>  0) & 0xff);
     return crc
+
+def frame(msg={}):
+    ############################################################################
+    # FIELD         START  LEN  ENCODING     COMMENT
+    ############################################################################
+    # packet_len     0      1    uint8        Typically 88
+    # packet_type    1      1    uint8        Typically 16
+    # version        2      1    uint8        Typically 2
+    # sequence_num   3      2    le_int16     Running counter
+    # state_info     5      2    uint8[2]     unknown meaning, [0, 0]
+    # serial         7     16    ASCII        Serial string
+    # uav_lon       23      4    le_int32     UAV longitude [-180, 180], scaled 
+    # uav_lat       27      4    le_int32     UAV latitude [-90, 90], scaled
+    # uav_height    31      2    le_int16     UAV height in m
+    # uav_alt       33      2    le_int16     UAV altitude in m
+    # uav_vel_n     35      2    le_int16     UAV velocity North
+    # uav_vel_e     37      2    le_int16     UAV velocity East
+    # uav_vel_u     39      2    le_int16     UAV velocity Up
+    # uav_yaw       41      2    le_int16     UAV yaw
+    # pilot_time    43      8    le_uint64    Pilot UNIX time in ms
+    # pilot_lat     51      4    le_int32     Pilot latitude [-90, 90], scaled 
+    # pilot_lon     55      4    le_int32     Pilot longitude [-180, 180], scaled 
+    # home_lon      59      4    le_int32     Home longitude [-180, 180], scaled 
+    # home_lat      63      4    le_int32     Home latitude [-90, 90], scaled
+    # product_type  64      1    uint8        DJI product type
+
+    scale = 10e6 * np.pi / 180.
+    frame = bytearray(176)
+
+    frame[0] = 88
+    frame[1] = 16
+    frame[2] =  2
+    frame[3:3 + 2] = pack('<h', msg['sequence_num'] if 'sequence_num' in dict.keys() else 0)
+    frame[5:5 + 2] = msg['state_info'] if 'state_info' in msg.keys() else [0, 0]
+    frame[7:7 + 16] = [ ord(c) for c in msg["serial"][:16] ]
+    lon = round(scale * msg["uav_lon"])
+    frame[23:23 + 4] = pack('<i', lon)
+    lat = round(scale * msg["uav_lat"])
+    frame[27:27 + 4] = pack('<i', lat)
+    frame[31:31 + 2] = pack('<h', msg["uav_height"])
+    frame[33:33 + 2] = pack('<h', msg["uav_alt"])
+    frame[35:35 + 2] = pack('<h', msg["uav_vel_n"])
+    frame[37:37 + 2] = pack('<h', msg["uav_vel_e"])
+    frame[39:39 + 2] = pack('<h', msg["uav_vel_u"])
+    frame[41:41 + 2] = pack('<h', msg["uav_yaw"])
+    frame[43:43 + 8] = pack('<Q', msg["pilot_time"])
+    lat = round(scale * msg["pilot_lat"])
+    frame[51:51 + 4] = pack('<i', lat)
+    lon = round(scale * msg["pilot_lon"])
+    frame[55:55 + 4] = pack('<i', lon)
+    lon = round(scale * msg["home_lon"])
+    frame[59:59 + 4] = pack('<i', lon)    
+    lat = round(scale * msg["home_lat"])
+    frame[63:63 + 4] = pack('<i', lat)
+    frame[64] = msg["product_type"]
+    uuid = [ ord(c) for c in msg["uuid"][:19] ]
+
+    frame[65] = len(uuid)
+    frame[66:66 + 19] = uuid + [0,] * (19 - len(uuid))
+    # Scrap values could be set here...
+    # frame[]
+    frame[173:173 + 3] = dji_crc(frame[:173])
+
+    return frame
+
+
 
 def encode(msg_dict=None):
     if msg_dict is None:
@@ -232,7 +300,7 @@ def golden_sequence(x2_init=None):
     return gs
 
 # To modulate:
-#  1. Encode 91 bytes from drone information              WAIT
+#  1. Encode 91 bytes from UAV information              WAIT
 #  2. Compute and add CRC                                 DONE
 #  3. Turbo encode and rate match                         DONE
 #  4. Run scrambler                                       DONE
@@ -257,7 +325,7 @@ if __name__ == '__main__':
          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,\
          0,   0,   0,  19,   0,   0,   0,   0,   0,   0,   0,   0,   0,\
          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  76, 201], dtype=np.uint8)
-    
+
     frame.tofile("frame.orig.bin")
     out = np.zeros(7200, dtype=np.uint8)
 
