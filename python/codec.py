@@ -4,6 +4,8 @@ import ctypes as ct
 from random import sample
 from crcmod import mkCrcFun
 from struct import pack
+import datetime
+now = datetime.datetime.now
 
 libdt = ct.cdll.LoadLibrary("libdt.so")
 libdt.dt_turbo_fwd.restype  = ct.c_uint32
@@ -28,14 +30,14 @@ frame_crc_fct = mkCrcFun(0x1864cfb, 0x00, False, 0x00) # returns integer
 def frame_crc(data):
     res = frame_crc_fct(data)
     crc = bytearray(3)
-    crc[0] = ((res >>  0) & 0xff);
+    crc[0] = ((res >> 16) & 0xff);
     crc[1] = ((res >>  8) & 0xff);
-    crc[2] = ((res >> 16) & 0xff);
+    crc[2] = ((res >>  0) & 0xff);
     return crc
 
 def payload_crc(data):
     init = 0x3692
-    table = (0x0000, 0x1189, 0x2312, 0x329b, 0x4624, 0x57ad, 0x6536, 0x74bf,
+    table =(0x0000, 0x1189, 0x2312, 0x329b, 0x4624, 0x57ad, 0x6536, 0x74bf,
             0x8c48, 0x9dc1, 0xaf5a, 0xbed3, 0xca6c, 0xdbe5, 0xe97e, 0xf8f7,
             0x1081, 0x0108, 0x3393, 0x221a, 0x56a5, 0x472c, 0x75b7, 0x643e,
             0x9cc9, 0x8d40, 0xbfdb, 0xae52, 0xdaed, 0xcb64, 0xf9ff, 0xe876,
@@ -67,17 +69,18 @@ def payload_crc(data):
             0x6b46, 0x7acf, 0x4854, 0x59dd, 0x2d62, 0x3ceb, 0x0e70, 0x1ff9,
             0xf78f, 0xe606, 0xd49d, 0xc514, 0xb1ab, 0xa022, 0x92b9, 0x8330,
             0x7bc7, 0x6a4e, 0x58d5, 0x495c, 0x3de3, 0x2c6a, 0x1ef1, 0x0f78)
-    crc = init
+    #print("{:04x}".format(table[128]))
+    res = init
     for i in range(len(data)):
-        crc = (crc >> 8) ^ table[(crc ^ data[i]) & 0x00ff]
-    res = bytearray(2)
-    res[0] = ((crc >>  0) & 0xff);
-    res[1] = ((crc >>  8) & 0xff);
-    return res
+        res = (res >> 8) ^ table[(res ^ data[i]) & 0x00ff]
+    crc = bytearray(2)
+    crc[0] = ((res >>  0) & 0xff);
+    crc[1] = ((res >>  8) & 0xff);
+    return crc
 
-def msg_to_bb(msg_dict=None, samp_rate=15.36e6):
-    msg = encode(msg_dict)
-    bits = turbo_fwd(msg)
+def msg_to_bb(msg_dict={}, samp_rate=15.36e6):
+    frm = frame(msg_dict)
+    bits = turbo_fwd(frm)
     gs = golden_sequence()
     bits = scramble(bits, gs)
     syms = bits_to_qpsk(bits)
@@ -226,7 +229,35 @@ def droneid_fields():
     k.append('crc')
     return k
 
-def frame(msg={}):
+def droneid_defaults():
+    msg_dict = {}
+    msg_dict['packet_len'] = 88
+    msg_dict['packet_type'] = 16
+    msg_dict['version'] = 2
+    msg_dict['sequence_num'] = 12345 #
+    msg_dict['state_info'] = [0, 0]
+    ser = b'Skysense'
+    msg_dict['serial'] = ser + b'0' * (16 - len(ser))
+    msg_dict['uav_lat'] = 59.401961877206965 # Österö
+    msg_dict['uav_lon'] = 17.96186335631357
+    msg_dict['uav_alt'] = 100
+    msg_dict['uav_height']  = 89
+    msg_dict['uav_vel_n'] = 0.123
+    msg_dict['uav_vel_e'] = 1.234
+    msg_dict['uav_vel_u'] = .02
+    msg_dict['uav_yaw'] = 12
+    msg_dict['pilot_time'] = 1668595129000 # 2022-11-16 11:39
+    msg_dict['pilot_lat'] = 59.40108401242872 # Hauka
+    msg_dict['pilot_lon'] = 17.95851152195049
+    msg_dict['home_lat'] = 59.403246486946564 # Ericsson
+    msg_dict['home_lon'] = 17.956683191685695
+    msg_dict['product_type'] = 68 # Mavic 3
+    msg_dict['uuid_len'] = 19
+    msg_dict['uuid'] = b'0123456789abcdefghi'
+    #msg_dict['terminator'] = 0x00
+    return msg_dict
+
+def frame(msg_dict={}):
     #################################################################################
     #    FIELD      START  LEN  ENCODING          COMMENT
     #################################################################################
@@ -240,7 +271,7 @@ def frame(msg={}):
     # uav_lat       27      4    le_int32        UAV latitude [-90, 90], scaled
     # uav_height    31      2    le_int16        UAV height in m
     # uav_alt       33      2    le_int16        UAV altitude in m
-    # uav_vel_n     35      2    le_int16        UAV velocity North
+    # uav_vel_n     35      2    le_int16        UAV velocity North m/s
     # uav_vel_e     37      2    le_int16        UAV velocity East
     # uav_vel_u     39      2    le_int16        UAV velocity Up
     # uav_yaw       41      2    le_int16        UAV yaw
@@ -259,25 +290,32 @@ def frame(msg={}):
     ###################   176    uint8           ####################################
     #################################################################################
 
+    msg = droneid_defaults()
+    for k in msg_dict.keys():
+        try:
+            msg[k] = msg_dict[k]
+        except:
+            pass
+
     scale = 10e6 * np.pi / 180.
     frame = bytearray(176)
 
     frame[0] = 88
     frame[1] = 16
     frame[2] =  2
-    frame[3:3 + 2] = pack('<h', msg['sequence_num'] if 'sequence_num' in dict.keys() else 0)
-    frame[5:5 + 2] = msg['state_info'] if 'state_info' in msg.keys() else [0, 0]
-    frame[7:7 + 16] = [ ord(c) for c in msg["serial"][:16] ]
+    frame[3:3 + 2] = pack('<h', msg['sequence_num'])
+    frame[5:5 + 2] = msg['state_info']
+    frame[7:7 + 16] = msg["serial"][:16]
     lon = round(scale * msg["uav_lon"])
     frame[23:23 + 4] = pack('<i', lon)
     lat = round(scale * msg["uav_lat"])
     frame[27:27 + 4] = pack('<i', lat)
-    frame[31:31 + 2] = pack('<h', msg["uav_height"])
-    frame[33:33 + 2] = pack('<h', msg["uav_alt"])
-    frame[35:35 + 2] = pack('<h', msg["uav_vel_n"])
-    frame[37:37 + 2] = pack('<h', msg["uav_vel_e"])
-    frame[39:39 + 2] = pack('<h', msg["uav_vel_u"])
-    frame[41:41 + 2] = pack('<h', msg["uav_yaw"])
+    frame[31:31 + 2] = pack('<h', round(msg["uav_height"] * 1.))
+    frame[33:33 + 2] = pack('<h', round(msg["uav_alt"] * 10.))
+    frame[35:35 + 2] = pack('<h', round(msg["uav_vel_n"] * 100.))
+    frame[37:37 + 2] = pack('<h', round(msg["uav_vel_e"] * 100.))
+    frame[39:39 + 2] = pack('<h', round(msg["uav_vel_u"] * 100.))
+    frame[41:41 + 2] = pack('<h', round(msg["uav_yaw"] * 100.))
     frame[43:43 + 8] = pack('<Q', msg["pilot_time"])
     lat = round(scale * msg["pilot_lat"])
     frame[51:51 + 4] = pack('<i', lat)
@@ -288,18 +326,15 @@ def frame(msg={}):
     lat = round(scale * msg["home_lat"])
     frame[63:63 + 4] = pack('<i', lat)
     frame[67] = msg["product_type"]
-    uuid = [ ord(c) for c in msg["uuid"][:19] ]
+    uuid = msg["uuid"][:19]
     frame[68] = len(uuid)
-    frame[69:69 + 19] = uuid + [0,] * (19 - len(uuid))
+    frame[69:69 + 19] = uuid + b'\x00' * (19 - len(uuid))
     frame[88] = 0x00
     frame[90:90 + 2] = payload_crc(frame[:89])
     # Scrap values could be set here...
-    # frame[]
+    # frame[91:91 + 82] = bytearray(82, )
     frame[173:173 + 3] = frame_crc(frame[:173])
-
     return frame
-
-
 
 def encode(msg_dict=None):
     if msg_dict is None:
@@ -322,6 +357,8 @@ def encode(msg_dict=None):
 def turbo_fwd(msg):
     if len(msg) != 176:
         return None
+    else:
+        msg = np.array(msg)
     frm = np.zeros(7200, dtype=np.uint8)
     res = libdt.dt_turbo_fwd(frm.ctypes.data_as(ct.POINTER(ct.c_uint8)), msg.ctypes.data_as(ct.POINTER(ct.c_uint8)))
     return frm
@@ -376,16 +413,36 @@ def golden_sequence(x2_init=None):
         gs[idx] = (x1[idx + Nc] + x2[idx + Nc]) % 2
     return gs
 
-# To modulate:
-#  1. Encode 91 bytes from UAV information              WAIT
-#  2. Compute and add CRC                                 DONE
-#  3. Turbo encode and rate match                         DONE
-#  4. Run scrambler                                       DONE
-#  5. Create OFDM symbols                                 DONE
-#     a. Generate QPSK symbols                            DONE
-#     b. Convert to time domain                           DONE
-#     c. Set symbol 4 and 6 to required ZC sequences      DONE
-#     d. Add cyclic prefix                                DONE
+def good_frame():
+    # just some Mavic 3 frame from the air
+    frm = bytes.fromhex('5810021702371f334e5a434843513030343358563100000000000000000000000007000000ffff\
+                         00003ec3c2f218d582010000e4319e0079d32f0000000000000000003f13313331353932343331\
+                         32363839323333393230003fff0000000000000000000000000000000000000000000000000000\
+                         0000000000000000000000000000000000000000000000000041c370e098e2a14c98d3d7a4299b\
+                         083e24034308f64c0925093855742faffe04dd2a')
+    return frm
+
+def rs_wv(iq_data, samp_rate):
+    iq_data /= max( [np.max(abs(np.real(iq_data))), np.max(abs(np.imag(iq_data)))] )
+    scale = 32767
+    iq_data *= scale
+    num_bytes = len(iq_data) * 2 * 2 + 1 # le_int16 encoding
+
+    date_str = now().strftime('%Y-%m-%d;%H:%M:%S')
+
+    bs  = b'{TYPE: SMU-WV,0}'
+    bs += b'{CLOCK: ' + "{:9.3f}".format(samp_rate).encode('ascii') + b'}'
+    bs += b'{LEVEL OFFS: 3.010300,0.000000}'
+    bs += b'{DATE: ' + "{}".format(date_str).encode('ascii') + b'}'
+    bs += b'{COPYRIGHT: Skysense}'
+    bs += b'{SAMPLES: ' + "{:d}".format(len(iq_data)).encode('ascii') + b'}'
+
+    bs += b'{WAVEFORM-' + "{:d}".format(num_bytes).encode('ascii') + b':#'
+    for z in iq_data:
+        bs += pack('<h', round(np.real(z)))
+        bs += pack('<h', round(np.imag(z)))
+    bs += b'}'
+    return bs
 
 if __name__ == '__main__':
     gs = golden_sequence()

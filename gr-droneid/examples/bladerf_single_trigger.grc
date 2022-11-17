@@ -41,6 +41,7 @@ blocks:
     cutoff_freq: 5e6
     gain: '1.0'
     samp_rate: samp_rate
+    value: ''
     width: 750e3
     win: window.WIN_HAMMING
   states:
@@ -70,7 +71,9 @@ blocks:
     label: IQ Delay
     min_len: '200'
     orient: QtCore.Qt.Horizontal
+    outputmsgname: value
     rangeType: int
+    showports: 'False'
     start: '0'
     step: '1'
     stop: '20000'
@@ -91,7 +94,9 @@ blocks:
     label: Delay T1
     min_len: '200'
     orient: QtCore.Qt.Horizontal
+    outputmsgname: value
     rangeType: int
+    showports: 'False'
     start: '1000'
     step: '1'
     stop: '3000'
@@ -112,7 +117,9 @@ blocks:
     label: FC
     min_len: '200'
     orient: QtCore.Qt.Horizontal
+    outputmsgname: value
     rangeType: float
+    showports: 'False'
     start: '500'
     step: '.5'
     stop: '6000'
@@ -133,7 +140,9 @@ blocks:
     label: GAIN
     min_len: '200'
     orient: QtCore.Qt.Horizontal
+    outputmsgname: value
     rangeType: int
+    showports: 'False'
     start: '0'
     step: '1'
     stop: '63'
@@ -154,7 +163,9 @@ blocks:
     label: LO
     min_len: '200'
     orient: QtCore.Qt.Horizontal
+    outputmsgname: value
     rangeType: float
+    showports: 'False'
     start: '-2000'
     step: '1'
     stop: '2000'
@@ -187,7 +198,9 @@ blocks:
     label: Trig level
     min_len: '200'
     orient: QtCore.Qt.Horizontal
+    outputmsgname: value
     rangeType: float
+    showports: 'False'
     start: '0'
     step: '.1'
     stop: '50'
@@ -234,7 +247,7 @@ blocks:
     bus_structure: null
     coordinate: [504, 368.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: blocks_file_source_0
   id: blocks_file_source
   parameters:
@@ -300,6 +313,7 @@ blocks:
     alias: ''
     biastee_rx: '1'
     bw: int(samp_rate * 1.2)
+    ch: '0'
     comment: ''
     external_freq: '10000000'
     external_ref: '1'
@@ -329,7 +343,7 @@ blocks:
     bus_structure: null
     coordinate: [1208, 328.0]
     rotation: 0
-    state: true
+    state: disabled
 - name: droneid_single_trigger_0
   id: droneid_single_trigger
   parameters:
@@ -347,7 +361,7 @@ blocks:
     bus_structure: null
     coordinate: [992, 384.0]
     rotation: 0
-    state: true
+    state: disabled
 - name: fft_filter_xxx_0
   id: fft_filter_xxx
   parameters:
@@ -385,7 +399,7 @@ blocks:
     bus_structure: null
     coordinate: [504, 556.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: import_0
   id: import
   parameters:
@@ -772,4 +786,4 @@ connections:
 
 metadata:
   file_format: 1
-  grc_version: 3.10.2.0
+  grc_version: 3.10.4.0
