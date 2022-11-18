@@ -422,28 +422,6 @@ def good_frame():
                          083e24034308f64c0925093855742faffe04dd2a')
     return frm
 
-def rs_wv(iq_data, samp_rate):
-    iq_data /= max( [np.max(abs(np.real(iq_data))), np.max(abs(np.imag(iq_data)))] )
-    scale = 32767
-    iq_data *= scale
-    num_bytes = len(iq_data) * 2 * 2 + 1 # le_int16 encoding
-
-    date_str = now().strftime('%Y-%m-%d;%H:%M:%S')
-
-    bs  = b'{TYPE: SMU-WV,0}'
-    bs += b'{CLOCK: ' + "{:9.3f}".format(samp_rate).encode('ascii') + b'}'
-    bs += b'{LEVEL OFFS: 3.010300,0.000000}'
-    bs += b'{DATE: ' + "{}".format(date_str).encode('ascii') + b'}'
-    bs += b'{COPYRIGHT: Skysense}'
-    bs += b'{SAMPLES: ' + "{:d}".format(len(iq_data)).encode('ascii') + b'}'
-
-    bs += b'{WAVEFORM-' + "{:d}".format(num_bytes).encode('ascii') + b':#'
-    for z in iq_data:
-        bs += pack('<h', round(np.real(z)))
-        bs += pack('<h', round(np.imag(z)))
-    bs += b'}'
-    return bs
-
 if __name__ == '__main__':
     gs = golden_sequence()
     s = ""
