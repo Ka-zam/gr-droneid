@@ -61,16 +61,16 @@ def blank(num_samples, samp_rate=15.36e6, sro_ppm=0):
     return bs
 
 def set_clock(samp_rate=15.36e6):
-    cmd = "bb:arb:clock {:9.6f}".format(samp_rate)
-    return cmd
+    return "bb:arb:clock {:9.6f}".format(samp_rate)
 
 def set_frequency(freq=2.415e9):
-    cmd = "frequency {:9.6f}".format(freq)
-    return cmd
+    return "frequency {:9.6f}".format(freq)
 
 def set_power(pwr=-60.0):
-    cmd = "power {:9.6f}".format(pwr)
-    return cmd    
+    return "power {:9.6f}".format(pwr)
+
+def set_output(state=False):
+    return "output {:1d}".format(1 if state else 0)
 
 def crc(data):
     if len(data) % 4 != 0:
