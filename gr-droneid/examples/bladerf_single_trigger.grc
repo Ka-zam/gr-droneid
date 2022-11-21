@@ -202,7 +202,7 @@ blocks:
     rangeType: float
     showports: 'False'
     start: '0'
-    step: '.1'
+    step: '.05'
     stop: '50'
     value: '5'
     widget: counter_slider
@@ -555,7 +555,7 @@ blocks:
     width8: '1'
     width9: '1'
     ylabel: Amplitude
-    ymax: '20'
+    ymax: 10*trig_level
     ymin: '0'
     yunit: '""'
   states:
@@ -731,9 +731,9 @@ blocks:
     style8: '1'
     style9: '1'
     tr_chan: '0'
-    tr_delay: '0'
-    tr_level: '0'
-    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_delay: 3e-6
+    tr_level: '0.1'
+    tr_mode: qtgui.TRIG_MODE_NORM
     tr_slope: qtgui.TRIG_SLOPE_POS
     tr_tag: '""'
     type: complex

@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(bladerf_lb.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(4ed8a7b1bb53fe6211754f13aae0b99a)                     */
+/* BINDTOOL_HEADER_FILE_HASH(61e4a3e1cc37ee31d873b96783cb1faa)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -30,31 +30,17 @@ namespace py = pybind11;
 void bind_bladerf_lb(py::module& m)
 {
 
-    using bladerf_lb    = ::gr::droneid::bladerf_lb;
+    using bladerf_lb = ::gr::droneid::bladerf_lb;
 
 
-    py::class_<bladerf_lb, gr::block, gr::basic_block,
-        std::shared_ptr<bladerf_lb>>(m, "bladerf_lb", D(bladerf_lb))
+    py::class_<bladerf_lb,
+               gr::sync_block,
+               gr::block,
+               gr::basic_block,
+               std::shared_ptr<bladerf_lb>>(m, "bladerf_lb", D(bladerf_lb))
 
-        .def(py::init(&bladerf_lb::make),
-           py::arg("samp_rate"),
-           D(bladerf_lb,make)
-        )
-        
-
+        .def(py::init(&bladerf_lb::make), py::arg("samp_rate"), D(bladerf_lb, make))
 
 
         ;
-
-
-
-
 }
-
-
-
-
-
-
-
-

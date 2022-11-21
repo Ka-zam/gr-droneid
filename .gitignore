@@ -129,6 +129,7 @@ dmypy.json
 
 cpp/scratch
 *.bin
+*.o
 build/
 gr-droneid/examples/*.py
 gr-droneid/examples/*.fc32

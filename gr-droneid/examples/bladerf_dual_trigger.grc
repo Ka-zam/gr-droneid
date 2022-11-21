@@ -41,6 +41,7 @@ blocks:
     cutoff_freq: 5e6
     gain: '1.0'
     samp_rate: samp_rate
+    value: ''
     width: 750e3
     win: window.WIN_HAMMING
   states:
@@ -70,7 +71,9 @@ blocks:
     label: IQ Delay
     min_len: '200'
     orient: QtCore.Qt.Horizontal
+    outputmsgname: value
     rangeType: int
+    showports: 'False'
     start: '0'
     step: '1'
     stop: '20000'
@@ -91,11 +94,13 @@ blocks:
     label: Delay T1
     min_len: '200'
     orient: QtCore.Qt.Horizontal
+    outputmsgname: value
     rangeType: int
+    showports: 'False'
     start: '1000'
     step: '1'
     stop: '3000'
-    value: '2450'
+    value: '1924'
     widget: counter_slider
   states:
     bus_sink: false
@@ -112,11 +117,13 @@ blocks:
     label: FC
     min_len: '200'
     orient: QtCore.Qt.Horizontal
+    outputmsgname: value
     rangeType: float
+    showports: 'False'
     start: '500'
     step: '.5'
     stop: '6000'
-    value: '2415.'
+    value: '2400.'
     widget: counter_slider
   states:
     bus_sink: false
@@ -133,11 +140,13 @@ blocks:
     label: GAIN
     min_len: '200'
     orient: QtCore.Qt.Horizontal
+    outputmsgname: value
     rangeType: int
+    showports: 'False'
     start: '0'
     step: '1'
-    stop: '63'
-    value: '6'
+    stop: '60'
+    value: '60'
     widget: counter_slider
   states:
     bus_sink: false
@@ -154,11 +163,13 @@ blocks:
     label: LO
     min_len: '200'
     orient: QtCore.Qt.Horizontal
+    outputmsgname: value
     rangeType: float
+    showports: 'False'
     start: '-2000'
     step: '1'
     stop: '2000'
-    value: '-506'
+    value: '-513'
     widget: counter_slider
   states:
     bus_sink: false
@@ -187,7 +198,9 @@ blocks:
     label: Trig level
     min_len: '200'
     orient: QtCore.Qt.Horizontal
+    outputmsgname: value
     rangeType: float
+    showports: 'False'
     start: '0'
     step: '.1'
     stop: '50'
@@ -291,7 +304,7 @@ blocks:
     bus_structure: null
     coordinate: [8, 796.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: blocks_multiply_const_xx_0
   id: blocks_multiply_const_xx
   parameters:
@@ -345,7 +358,7 @@ blocks:
     bus_structure: null
     coordinate: [264, 828.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: calibrate_bladerf_single_c_0
   id: calibrate_bladerf_single_c
   parameters:
@@ -353,6 +366,7 @@ blocks:
     alias: ''
     biastee_rx: '0'
     bw: int(samp_rate * 1.2)
+    ch: '0'
     comment: ''
     external_freq: '10000000'
     external_ref: '1'
@@ -367,9 +381,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [8, 620.0]
+    coordinate: [40, 548.0]
     rotation: 0
-    state: disabled
+    state: enabled
 - name: droneid_dual_trigger_0
   id: droneid_dual_trigger
   parameters:
@@ -377,6 +391,7 @@ blocks:
     alias: ''
     chunk_size: '9600'
     comment: ''
+    fc: '2414.5'
     maxoutbuf: '0'
     minoutbuf: '0'
     threshold: trig_level
@@ -399,7 +414,7 @@ blocks:
     bus_structure: null
     coordinate: [1400, 320.0]
     rotation: 0
-    state: true
+    state: disabled
 - name: fft_filter_xxx_0
   id: fft_filter_xxx
   parameters:
@@ -457,7 +472,7 @@ blocks:
     bus_structure: null
     coordinate: [728, 260.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: import_0
   id: import
   parameters:
@@ -595,7 +610,7 @@ blocks:
     width8: '1'
     width9: '1'
     ylabel: Amplitude
-    ymax: '20'
+    ymax: 10*trig_level
     ymin: '0'
     yunit: '""'
   states:
@@ -752,4 +767,4 @@ connections:
 
 metadata:
   file_format: 1
-  grc_version: 3.10.2.0
+  grc_version: 3.10.4.0

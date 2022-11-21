@@ -3,7 +3,7 @@ from struct import pack
 import datetime
 now = datetime.datetime.now
 
-def rs_makefile(bb, samp_rate, period_ms=10):
+def rs_makefile(bb, samp_rate, period_ms=10, sro_ppm=0):
 	# Make the first file an even period_ms in length
 	if period_ms < 1:
 		print("Minimum period is 1ms")
@@ -20,44 +20,54 @@ def rs_makefile(bb, samp_rate, period_ms=10):
 	bs = rs_wv(bb, samp_rate, "DroneID, PRF: {:6.2f} Hz".format(prf))
 	return bs
 
-def rs_wv(iq_data, samp_rate=15.36e6, comment="DroneID message"):
+def rs_wv(iq_data, samp_rate=15.36e6, comment="DroneID message",sro_ppm=0):
     iq_data /= max( [np.max(abs(np.real(iq_data))), np.max(abs(np.imag(iq_data)))] )
     scale = 32767
     iq_data *= scale
     num_bytes = len(iq_data) * 2 * 2 + 1 # le_int16 encoding
     date_str = now().strftime('%Y-%m-%d;%H:%M:%S')
-
-    bs  = b'{TYPE: SMU-WV,0}'
-    bs += b'{CLOCK: ' + "{:9.3f}".format(samp_rate).encode('ascii') + b'}'
-    bs += b'{LEVEL OFFS: 3.010300,0.000000}'
-    bs += b'{DATE: ' + "{}".format(date_str).encode('ascii') + b'}'
-    bs += b'{COPYRIGHT: Skysense AB}'
-    bs += b'{COMMENT:' + " {}".format(comment).encode('ascii') + b'}'   
-    bs += b'{SAMPLES: ' + "{:d}".format(len(iq_data)).encode('ascii') + b'}'
-
-    bs += b'{WAVEFORM-' + "{:d}".format(num_bytes).encode('ascii') + b':#'
+    actual_samp_rate = samp_rate * (1. + sro_ppm * 1e-6)
+    iq_bytes = b''
     for z in iq_data:
-        bs += pack('<h', round(np.real(z)))
-        bs += pack('<h', round(np.imag(z)))
-    bs += b'}'
+        iq_bytes += pack('<h', round(np.real(z)))
+        iq_bytes += pack('<h', round(np.imag(z)))
+
+    bs  = b'{CLOCK: ' + "{:9.3f}}}".format(actual_samp_rate).encode('ascii')
+    bs += b'{LEVEL OFFS: 3.010300,0.000000}'
+    bs += b'{DATE: ' + "{}}}".format(date_str).encode('ascii')
+    bs += b'{COPYRIGHT: Skysense AB}'
+    bs += b'{COMMENT:' + " {}}}".format(comment).encode('ascii')
+    bs += b'{SAMPLES: ' + "{:d}}}".format(len(iq_data)).encode('ascii')
+    bs += b'{WAVEFORM-' + "{:d}:#".format(num_bytes).encode('ascii') + iq_bytes + b'}'
+    bs  = b'{TYPE: SMU-WV,' + "{:d}}}".format(crc(iq_bytes)).encode('ascii') + bs
     return bs
 
-def rs_blank(num_samples, samp_rate=15.36e6):
+def rs_blank(num_samples, samp_rate=15.36e6, sro_ppm=0):
     num_samples = int(num_samples)
     num_bytes = num_samples * 2 * 2 + 1 # le_int16 encoding
     date_str = now().strftime('%Y-%m-%d;%H:%M:%S')
+    actual_samp_rate = samp_rate * (1. + sro_ppm * 1e-6)    
 
     bs  = b'{TYPE: SMU-WV,0}'
-    bs += b'{CLOCK: ' + "{:9.3f}".format(samp_rate).encode('ascii') + b'}'
+    bs += b'{CLOCK: ' + "{:9.3f}}}".format(actual_samp_rate).encode('ascii')
     bs += b'{LEVEL OFFS: 200,200}'
-    bs += b'{DATE: ' + "{}".format(date_str).encode('ascii') + b'}'
+    bs += b'{DATE: ' + "{}}}".format(date_str).encode('ascii')
     bs += b'{COPYRIGHT: Skysense AB}'
     bs += b'{COMMENT: Blank segment}'
-    bs += b'{SAMPLES: ' + "{:d}".format(num_samples).encode('ascii') + b'}'
-
-    bs += b'{WAVEFORM-' + "{:d}".format(num_bytes).encode('ascii') + b':#'
-    for _ in range(num_samples):
-        bs += pack('<h', 0)
-        bs += pack('<h', 0)
+    bs += b'{SAMPLES: ' + "{:d}}}".format(num_samples).encode('ascii')
+    bs += b'{WAVEFORM-' + "{:d}:#".format(num_bytes).encode('ascii')
+    bs += b'\x00' * num_samples * 2 * 2
     bs += b'}'
     return bs
+
+def crc(data):
+	if len(data) % 4 != 0:
+		return None
+	num_samples = len(data) // 4
+	res = 0xa50f74ff
+	ptr = 0
+	for _ in range(num_samples):
+		res ^= int.from_bytes(data[ptr:ptr + 4], byteorder='little', signed=False)
+		ptr += 4
+	return res
+
