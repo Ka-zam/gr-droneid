@@ -414,7 +414,7 @@ blocks:
     bus_structure: null
     coordinate: [1400, 320.0]
     rotation: 0
-    state: disabled
+    state: enabled
 - name: fft_filter_xxx_0
   id: fft_filter_xxx
   parameters:
