@@ -385,11 +385,10 @@ def scramble(bits, gs=None):
         return bits
 
 def golden_sequence(x2_init=None):
-    x1_init = np.array([1]+[0,]*30, dtype=np.uint8)
-
+    x1_init = bytes([1,] + [0,] * 30)
     if x2_init is None:
         # 0x12345678 in reverse order. Magic. Leave out leading 0.
-        x2_init = np.array([0,0,1,0,0,1,0,0,0,1,1,0,1,0,0,0,1,0,1,0,1,1,0,0,1,1,1,1,0,0,0], dtype=np.uint8)
+        x2_init = bytes([0,0,1,0,0,1,0,0,0,1,1,0,1,0,0,0,1,0,1,0,1,1,0,0,1,1,1,1,0,0,0])
         x2_init = x2_init[::-1]
     elif len(x2_init) != len(x1_init):
         return None
@@ -398,9 +397,9 @@ def golden_sequence(x2_init=None):
     M_pn = 7200 # As defined in 36.211 7.2
     Nc = 1600 
 
-    x1 = np.zeros(Nc + M_pn + len(x1_init), dtype=np.uint8)
-    x2 = np.zeros(Nc + M_pn + len(x2_init), dtype=np.uint8)
-    gs = np.zeros(M_pn, dtype=np.uint8)
+    x1 = bytearray(Nc + M_pn + len(x1_init))
+    x2 = bytearray(Nc + M_pn + len(x2_init))
+    gs = bytearray(M_pn)
 
     x1[:reg_len] = x1_init
     x2[:reg_len] = x2_init
@@ -411,7 +410,7 @@ def golden_sequence(x2_init=None):
 
     for idx in range(M_pn):
         gs[idx] = (x1[idx + Nc] + x2[idx + Nc]) % 2
-    return gs
+    return gs    
 
 def good_frame():
     # just some Mavic 3 frame from the air

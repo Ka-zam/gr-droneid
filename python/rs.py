@@ -48,7 +48,6 @@ def blank(num_samples, samp_rate=15.36e6, sro_ppm=0):
     date_str = now().strftime('%Y-%m-%d;%H:%M:%S')
     actual_samp_rate = samp_rate * (1. + sro_ppm * 1e-6)    
 
-    bs  = b'{TYPE: SMU-WV,0}'
     bs += b'{CLOCK: ' + "{:9.3f}}}".format(actual_samp_rate).encode('ascii')
     bs += b'{LEVEL OFFS: 200,200}'
     bs += b'{DATE: ' + "{}}}".format(date_str).encode('ascii')
@@ -56,9 +55,13 @@ def blank(num_samples, samp_rate=15.36e6, sro_ppm=0):
     bs += b'{COMMENT: Blank segment}'
     bs += b'{SAMPLES: ' + "{:d}}}".format(num_samples).encode('ascii')
     bs += b'{WAVEFORM-' + "{:d}:#".format(num_bytes).encode('ascii')
-    bs += b'\x00' * num_samples * 2 * 2
-    bs += b'}'
+    bs += b'\x00' * num_samples * 2 * 2 + b'}'
+    bs  = b'{TYPE: SMU-WV,' + "{:d}}}".format(crc(iq_bytes)).encode('ascii') + bs    
     return bs
+
+def cfo_sco(crystal_err_ppm=0., fc=2414.5e6, samp_rate=15.36e6):
+    scale = 1. + (crystal_err_ppm * 1e-6)
+    return (fc * scale, samp_rate * scale)
 
 def set_clock(samp_rate=15.36e6):
     return "bb:arb:clock {:9.6f}".format(samp_rate)
@@ -72,6 +75,15 @@ def set_power(pwr=-60.0):
 def set_output(state=False):
     return "output {:1d}".format(1 if state else 0)
 
+def set_file(filename):
+    # for SMCV100B you can transfer file via FTP, user/pass: instrument/instrument
+    # place file in /user
+    # 'mmemory:cat?' reports file from this directory
+    # they appear under /var/user/
+    # give filename without .wv extension
+    filename = "/var/user/" + filename
+    return "bb:arb:wav:sel \"{}\"".format(filename)
+
 def crc(data):
     if len(data) % 4 != 0:
         return None
@@ -82,4 +94,3 @@ def crc(data):
         res ^= int.from_bytes(data[ptr:ptr + 4], byteorder='little', signed=False)
         ptr += 4
     return res
-
