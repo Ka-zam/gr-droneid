@@ -1,11 +1,18 @@
 #include <vector>
 #include <iostream>
 #include <inttypes.h>
+#include <filesystem>
+#include <complex>
+
+//using cxf_t = std::complex<float>;
+typedef float cxf_t[2];
 
 /*
 g++ -o scratch -std=c++17 -O2 scratch.cpp
 */
-void golden_sequence(int8_t *gs) {
+void 
+golden_sequence(int8_t *gs) 
+{
   constexpr int nc = 1600;
   constexpr int l = 7200;
   int8_t x1[l+nc+31] = {1};
@@ -20,14 +27,61 @@ void golden_sequence(int8_t *gs) {
   }
 }
 
-float toa(const std::vector<float> &y) {
-    const float a = .5f * (y.at(0) - y.at(2)) + y.at(1) - y.at(0);
-    const float b = y.at(1) - y.at(0) + a;
+float 
+toa(const std::vector<float> &y) 
+{
+    const float a = .5f * (y[0] - y[2]) + y[1] - y[0];
+    const float b = y[1] - y[0] + a;
     return b / (2.f * a);
 }
 
-int main(){
+int 
+main(int argc, char** argv)
+{
+	constexpr int N = 8;
+	cxf_t z_arr[N];
 
+	float x = 0.f;
+	for (int i = 0; i < N; i++) {
+		z_arr[i][0] = x;
+		x += 1.f;
+		z_arr[i][1] = x;
+		x += 1.f;
+	}
+	
+
+	for(auto &v: z_arr) {
+		//std::cout << v.real() << "  " << v.imag() << std::endl;
+		std::cout << v[0] << "  " << v[1] << std::endl;
+	}
+
+	return 0;
+
+
+
+	/*
+	std::vector<std::string> args;
+	if (argc > 1) {
+		args.assign(argv + 1, argv + argc);
+	} else {
+		args.push_back(".");
+	}
+	
+	if (!std::filesystem::exists(args[0])) {
+		std::cout << "File not found: " << args[0] << "\n";
+		return 0;
+	}
+
+	std::vector<std::string> files;
+	for (const auto &entry: std::filesystem::directory_iterator(args[0])) {
+		files.push_back(entry.path());
+	}
+
+	for (const auto &f: files) {
+		std::cout << f << std::endl;
+	}
+
+	return 0;
 	constexpr size_t L = 7200;
 	int8_t* gs = (int8_t*) malloc(L * sizeof(int8_t));
 
@@ -38,7 +92,6 @@ int main(){
 	}
 	std::cout << std::endl;
 
-	/*
 	int16_t vec[8] = {1};
 	for(auto &v: vec) {
 		std::cout << v << " ";
