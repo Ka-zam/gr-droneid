@@ -13,6 +13,38 @@ libdt.dt_turbo_fwd.argtypes = [ct.POINTER(ct.c_uint8), ct.POINTER(ct.c_uint8)]
 libdt.dt_turbo_rev.restype  = ct.c_uint64
 libdt.dt_turbo_rev.argtypes = [ct.POINTER(ct.c_uint8), ct.POINTER(ct.c_uint8)]
 
+#################################################################################
+#    FIELD      START  LEN  ENCODING          COMMENT
+#################################################################################
+# packet_len     0      1    uint8           Typically 88
+# packet_type    1      1    uint8           Typically 16
+# version        2      1    uint8           Typically 2
+# sequence_num   3      2    le_int16        Running counter
+# state_info     5      2    uint8[2]        unknown meaning, [0, 0]
+# serial         7     16    uint8[16]       Serial string
+# uav_lon       23      4    le_int32        UAV longitude [-180, 180], scaled 
+# uav_lat       27      4    le_int32        UAV latitude [-90, 90], scaled
+# uav_height    31      2    le_int16        UAV height in m
+# uav_alt       33      2    le_int16        UAV altitude in m
+# uav_vel_n     35      2    le_int16        UAV velocity North m/s
+# uav_vel_e     37      2    le_int16        UAV velocity East
+# uav_vel_u     39      2    le_int16        UAV velocity Up
+# uav_yaw       41      2    le_int16        UAV yaw
+# pilot_time    43      8    le_uint64       Pilot UNIX time in ms
+# pilot_lat     51      4    le_int32        Pilot latitude [-90, 90], scaled 
+# pilot_lon     55      4    le_int32        Pilot longitude [-180, 180], scaled 
+# home_lon      59      4    le_int32        Home longitude [-180, 180], scaled 
+# home_lat      63      4    le_int32        Home latitude [-90, 90], scaled
+# product_type  67      1    uint8           DJI product type
+# uuid_len      68      1    uint8           uuid length, max 19
+# uuid          69     19    uint8[19]       uuid, 0x00 fill at end
+# terminator    88      1    uint8           0x00
+# payload_crc   90      2    uint8           payload crc
+# scrap_bytes   91     82    uint8           Seems to be 'DONT CARE'
+# frame_crc    173      3    uint8           frame crc
+###################   176    uint8           ####################################
+#################################################################################
+
 droneid = {}
 droneid["carrier_spacing"]  = 15.0e3 # Hz
 droneid["data_carriers"]    = 600
@@ -85,6 +117,13 @@ def msg_to_bb(msg_dict={}, samp_rate=15.36e6):
     bits = scramble(bits, gs)
     syms = bits_to_qpsk(bits)
     return baseband(syms, samp_rate)
+
+def msg_to_bits(msg_dict={}):
+    frm = frame(msg_dict)
+    bits = turbo_fwd(frm)
+    gs = golden_sequence()
+    return scramble(bits, gs)
+    #return bits
 
 def bits_to_qpsk(bits):
     N = len(bits)
@@ -258,38 +297,6 @@ def droneid_defaults():
     return msg_dict
 
 def frame(msg_dict={}):
-    #################################################################################
-    #    FIELD      START  LEN  ENCODING          COMMENT
-    #################################################################################
-    # packet_len     0      1    uint8           Typically 88
-    # packet_type    1      1    uint8           Typically 16
-    # version        2      1    uint8           Typically 2
-    # sequence_num   3      2    le_int16        Running counter
-    # state_info     5      2    uint8[2]        unknown meaning, [0, 0]
-    # serial         7     16    uint8[16]       Serial string
-    # uav_lon       23      4    le_int32        UAV longitude [-180, 180], scaled 
-    # uav_lat       27      4    le_int32        UAV latitude [-90, 90], scaled
-    # uav_height    31      2    le_int16        UAV height in m
-    # uav_alt       33      2    le_int16        UAV altitude in m
-    # uav_vel_n     35      2    le_int16        UAV velocity North m/s
-    # uav_vel_e     37      2    le_int16        UAV velocity East
-    # uav_vel_u     39      2    le_int16        UAV velocity Up
-    # uav_yaw       41      2    le_int16        UAV yaw
-    # pilot_time    43      8    le_uint64       Pilot UNIX time in ms
-    # pilot_lat     51      4    le_int32        Pilot latitude [-90, 90], scaled 
-    # pilot_lon     55      4    le_int32        Pilot longitude [-180, 180], scaled 
-    # home_lon      59      4    le_int32        Home longitude [-180, 180], scaled 
-    # home_lat      63      4    le_int32        Home latitude [-90, 90], scaled
-    # product_type  67      1    uint8           DJI product type
-    # uuid_len      68      1    uint8           uuid length, max 19
-    # uuid          69     19    uint8[19]       uuid, 0x00 fill at end
-    # terminator    88      1    uint8           0x00
-    # payload_crc   90      2    uint8           payload crc
-    # scrap_bytes   91     82    uint8           Seems to be 'DONT CARE'
-    # frame_crc    173      3    uint8           frame crc
-    ###################   176    uint8           ####################################
-    #################################################################################
-
     msg = droneid_defaults()
     for k in msg_dict.keys():
         try:

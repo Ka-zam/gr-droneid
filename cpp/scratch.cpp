@@ -3,9 +3,12 @@
 #include <inttypes.h>
 #include <filesystem>
 #include <complex>
+#include <algorithm>
 
-//using cxf_t = std::complex<float>;
-typedef float cxf_t[2];
+using cxf_t = std::complex<float>;
+using namespace std::complex_literals;
+
+//typedef float cxf_t[2];
 
 /*
 g++ -o scratch -std=c++17 -O2 scratch.cpp
@@ -35,9 +38,50 @@ toa(const std::vector<float> &y)
     return b / (2.f * a);
 }
 
+void
+fftshift(std::vector<cxf_t> &vec){
+	size_t n = vec.size() / 2;
+	n += n % 2;
+	std::rotate(vec.begin(), vec.begin() + n, vec.end());
+}
+
+void
+ifftshift(std::vector<cxf_t> &vec){
+	size_t n = vec.size() / 2;
+	std::rotate(vec.begin(), vec.begin() + n, vec.end());
+}
+
 int 
 main(int argc, char** argv)
 {
+	constexpr int N = 3;
+	std::vector<cxf_t> samples(N);
+
+	for (int i = 0; i < N; ++i)	{
+		samples[i] = (float) i * (1.f + 1.if);
+	}
+
+	for (auto &v: samples){
+		std::cout << v << " ";
+	}
+	std::cout << std::endl;
+
+	ifftshift(samples);
+	for (auto &v: samples){
+		std::cout << v << " ";
+	}
+	std::cout << std::endl;	
+
+	return 0;
+	/*
+	cxf_t x = cxf_t(1.f, 2.f);
+	x += 3.f;
+	std::cout << x << std::endl;
+
+	cxf_t y = {3,5};
+	y += 3.if;
+	std::cout << y << std::endl;
+
 	constexpr int N = 8;
 	cxf_t z_arr[N];
 
@@ -54,12 +98,6 @@ main(int argc, char** argv)
 		//std::cout << v.real() << "  " << v.imag() << std::endl;
 		std::cout << v[0] << "  " << v[1] << std::endl;
 	}
-
-	return 0;
-
-
-
-	/*
 	std::vector<std::string> args;
 	if (argc > 1) {
 		args.assign(argv + 1, argv + argc);
