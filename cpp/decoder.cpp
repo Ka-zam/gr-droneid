@@ -44,22 +44,12 @@ toa(const std::vector<float> &y)
 }
 
 /*
-float fractional_frequency_offset_estimation_orig(fftwf_complex *broadcast_samples)
-{
-  std::complex<float> tmp;
-  float ffo = 0;
-  fftwf_complex d_multiplied_samples[SHORT_CP_1536];
-  volk_32fc_x2_multiply_conjugate_32fc(reinterpret_cast<std::complex<float>*>(&d_multiplied_samples[0]), reinterpret_cast<std::complex<float>*>(broadcast_samples), reinterpret_cast<std::complex<float>*>(broadcast_samples + OFDM_DATA_LEN_1536), SHORT_CP_1536);
-  for(int i = 0;i < SHORT_CP_1536; i++)
-  {
-    tmp.real(tmp.real() + d_multiplied_samples[i][0]);
-    tmp.imag(tmp.imag() + d_multiplied_samples[i][1]);
-  }
-  ffo = std::atan2(tmp.imag(),tmp.real());
-  return ffo;
-}
-*/
 
+Decoding steps:
+  1. 
+
+
+*/
 class decoder
 {
 private:

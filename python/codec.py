@@ -188,8 +188,8 @@ def baseband(qpsk_symbols, samp_rate):
     cp_s = short_cp_size(samp_rate)
     cp_schedule = [cp_l if x == 1 else cp_s for x in droneid["cp_seq"][-N_sym:]]
 
-    bb_len  = sum(cp_schedule)
-    bb_len += N_fft * droneid["symbols"]
+    bb_len  = N_fft * droneid["symbols"]
+    bb_len += sum(cp_schedule)
     iq = np.zeros( bb_len, dtype=np.complex128)
 
     # Add cyclic prefix
@@ -197,7 +197,7 @@ def baseband(qpsk_symbols, samp_rate):
     for s in range(N_sym):
         cp_len = cp_schedule[s]
         #print("s: {}  cp_len: {}".format(s,cp_len))
-        cp = ofdm_symbols_time[s, -cp_len:]
+        cp = ofdm_symbols_time[s, -cp_len:] # First symbol has short CP when there are only 8 symbols
         sym = ofdm_symbols_time[s, :]
         iq[idx: idx + cp_len + N_fft] = np.concatenate([cp, sym])
         idx += cp_len + N_fft
