@@ -51,8 +51,7 @@ droneid["data_carriers"]    = 600
 droneid["symbols"]          = 8
 droneid["zc_root_symbol_4"] = 600
 droneid["zc_root_symbol_6"] = 147
-#droneid["cp_seq"]           = [1, 0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
-droneid["cp_seq"]           = [0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
+droneid["cp_seq"]           = [1, 0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
 droneid["models"]           = { 16: "Mavic Pro", 41: "Mavic 2", 61: "DJI FPV", 63: "Mini 2", 68: "Mavic 3" }
 
 # Poly, Initial = 0x00, No reflect, FinalXOR = 0x00
@@ -110,20 +109,29 @@ def payload_crc(data):
     crc[1] = ((res >>  8) & 0xff);
     return crc
 
-def msg_to_bb(msg_dict={}, samp_rate=15.36e6):
+def msg_to_baseband(msg_dict={}, samp_rate=15.36e6):
     frm = frame(msg_dict)
     bits = turbo_fwd(frm)
     gs = golden_sequence()
     bits = scramble(bits, gs)
     syms = bits_to_qpsk(bits)
-    return baseband(syms, samp_rate)
+    bb = baseband(syms, samp_rate)
+    return bb
 
 def msg_to_bits(msg_dict={}):
     frm = frame(msg_dict)
     bits = turbo_fwd(frm)
     gs = golden_sequence()
-    return scramble(bits, gs)
-    #return bits
+    bits = scramble(bits, gs)
+    return bits
+
+def msg_to_symbols(msg_dict={}):
+    frm = frame(msg_dict)
+    bits = turbo_fwd(frm)
+    gs = golden_sequence()
+    bits = scramble(bits, gs)
+    syms = bits_to_qpsk(bits)
+    return syms
 
 def bits_to_qpsk(bits):
     N = len(bits)
@@ -178,7 +186,7 @@ def baseband(qpsk_symbols, samp_rate):
 
     cp_l = long_cp_size(samp_rate)
     cp_s = short_cp_size(samp_rate)
-    cp_schedule = [cp_l if x == 1 else cp_s for x in droneid["cp_seq"]]
+    cp_schedule = [cp_l if x == 1 else cp_s for x in droneid["cp_seq"][-N_sym:]]
 
     bb_len  = sum(cp_schedule)
     bb_len += N_fft * droneid["symbols"]
@@ -188,6 +196,7 @@ def baseband(qpsk_symbols, samp_rate):
     idx = 0
     for s in range(N_sym):
         cp_len = cp_schedule[s]
+        #print("s: {}  cp_len: {}".format(s,cp_len))
         cp = ofdm_symbols_time[s, -cp_len:]
         sym = ofdm_symbols_time[s, :]
         iq[idx: idx + cp_len + N_fft] = np.concatenate([cp, sym])
@@ -427,6 +436,10 @@ def good_frame():
                          0000000000000000000000000000000000000000000000000041c370e098e2a14c98d3d7a4299b\
                          083e24034308f64c0925093855742faffe04dd2a')
     return frm
+
+def cnoise(num=100, pwr_db=10):
+    a = 10**(pwr_db / 20) * np.sqrt(.5)
+    return a* (np.random.randn(num) + 1j*np.random.randn(num))
 
 if __name__ == '__main__':
     gs = golden_sequence()
