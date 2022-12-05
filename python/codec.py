@@ -196,12 +196,17 @@ def baseband(qpsk_symbols, samp_rate):
     idx = 0
     for s in range(N_sym):
         cp_len = cp_schedule[s]
-        #print("s: {}  cp_len: {}".format(s,cp_len))
-        cp = ofdm_symbols_time[s, -cp_len:] # First symbol has short CP when there are only 8 symbols
+        cp = ofdm_symbols_time[s, -cp_len:]
         sym = ofdm_symbols_time[s, :]
         iq[idx: idx + cp_len + N_fft] = np.concatenate([cp, sym])
         idx += cp_len + N_fft
     return iq / np.max(np.abs(iq))
+
+def sto(iq, sto_fraction=0.0, sco_error_ppm=0.0, phase_noise=0.0):
+    x_frac =  np.linspace(sto_fraction, sto_fraction + len(iq) - 2, len(iq) - 1)
+    x_frac += np.linspace(0, sco_error_ppm * 1e-6 * 15.36 * (len(x_frac) - 1), len(x_frac))
+    x_frac += np.random.randn(len(x_frac)) * phase_noise
+    return (x_frac, np.interp(x_frac, range(len(iq)), iq))
 
 def data_indices(samp_rate):
     N_c = droneid["data_carriers"]
@@ -210,7 +215,7 @@ def data_indices(samp_rate):
     N_left = N_c // 2
     N_right = N_c // 2
     # Build a list of indices, DC excluded
-    indices =  [i for i in range(idx_dc - N_left, idx_dc)              ]
+    indices  = [i for i in range(idx_dc - N_left, idx_dc)              ]
     indices += [i for i in range(idx_dc + 1     , idx_dc + N_right + 1)]
     return indices
 

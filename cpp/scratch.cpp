@@ -38,10 +38,15 @@ toa(const std::vector<float> &y)
     return b / (2.f * a);
 }
 
+void bfftshift(std::vector<cxf_t> &vec, const int32_t direction) {
+	// FFTW3 defines forward as -1
+	const size_t n = (vec.size() / 2) + ((vec.size() % 2) && (direction < 0));
+	std::rotate(vec.begin(), vec.begin() + n, vec.end());
+}
+
 void
 fftshift(std::vector<cxf_t> &vec){
-	size_t n = vec.size() / 2;
-	n += n % 2;
+	const size_t n = (vec.size() / 2) + ((vec.size() % 2));
 	std::rotate(vec.begin(), vec.begin() + n, vec.end());
 }
 
@@ -54,23 +59,55 @@ ifftshift(std::vector<cxf_t> &vec){
 int 
 main(int argc, char** argv)
 {
-	constexpr int N = 3;
+	constexpr int N = 9;
 	std::vector<cxf_t> samples(N);
+	std::vector<cxf_t> tmp(N);
 
 	for (int i = 0; i < N; ++i)	{
 		samples[i] = (float) i * (1.f + 1.if);
 	}
+	tmp = samples;
 
+	/*
+	std::cout << "original     : ";
+	for (auto &v: samples){
+		std::cout << v << " ";
+	}
+	std::cout << std::endl;
+	*/
+	
+	samples = tmp;
+	fftshift(samples);
+	std::cout << "fftshift     : ";
 	for (auto &v: samples){
 		std::cout << v << " ";
 	}
 	std::cout << std::endl;
 
-	ifftshift(samples);
+	samples = tmp;
+	bfftshift(samples, -1);
+	std::cout << "bfftshift fwd: ";
 	for (auto &v: samples){
 		std::cout << v << " ";
 	}
-	std::cout << std::endl;	
+	std::cout << std::endl;
+	
+
+	samples = tmp;
+	ifftshift(samples);
+	std::cout << "ifftshift    : ";
+	for (auto &v: samples){
+		std::cout << v << " ";
+	}
+	std::cout << std::endl;
+	
+	samples = tmp;
+	bfftshift(samples, 1);
+	std::cout << "bfftshift rev: ";
+	for (auto &v: samples){
+		std::cout << v << " ";
+	}
+	std::cout << std::endl;
 
 	return 0;
 	/*

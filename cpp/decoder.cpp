@@ -45,76 +45,102 @@ toa(const std::vector<float> &y)
 
 /*
 
+Metadata in:
+    1. Sample rate
+    2. Fc
+    3. Sample number
+    4. Time stamp relative start of buffer
+
 Decoding steps:
-  1. 
+  1.  Channelization
+  2.  Downsampling
+  3.  Low pass filtering
+  4.  Integer Frequency Offset
+  5.  Find STO and resample
+  6.  CFO estimate
+  7.  OFDM symbol extraction
+  8.  Channel estimate
+  9.  Equalize data carriers
+  10. Demodulate QPSK
+  11. Descramble
+  12. Apply turbo coder (w/ QPSK load bearing constants)
 
-
+Metadata out:
+    1. Fc
+    2. CFO
+    3. TOA
+    4. SNR
+    5. STO
+    6. SCO
+    7. Channel estimate
+    8. FEC corrected error list
 */
+
 class decoder
 {
 private:
-	static constexpr uint32_t SHORT_CP_1536 = 72;
-	static constexpr uint32_t LONG_CP_1536 = 80;
-	static constexpr uint32_t OFDM_DATA_LEN_1536 = 1024;
-	static constexpr uint32_t N_ZC_1536 = 601;
-	static constexpr uint32_t N_LEFT_GUARD_SUBCARRIERS_1536 = 212;
-	static constexpr uint32_t OCU_10MHz_ZC_LEN = 1024;
-	static constexpr uint32_t FFT_LEN_1536 = 16384;
-	static constexpr uint32_t N_BROADCAST_6144_LEN = 35104;
-	static constexpr uint32_t N_BROADCAST_1536_LEN = 8776;
-	static constexpr uint32_t OFDM_SYMBOL_LEN_1536 = 1096;
+    static constexpr uint32_t SHORT_CP_1536 = 72;
+    static constexpr uint32_t LONG_CP_1536 = 80;
+    static constexpr uint32_t OFDM_DATA_LEN_1536 = 1024;
+    static constexpr uint32_t N_ZC_1536 = 601;
+    static constexpr uint32_t N_LEFT_GUARD_SUBCARRIERS_1536 = 212;
+    static constexpr uint32_t OCU_10MHz_ZC_LEN = 1024;
+    static constexpr uint32_t FFT_LEN_1536 = 16384;
+    static constexpr uint32_t N_BROADCAST_6144_LEN = 35104;
+    static constexpr uint32_t N_BROADCAST_1536_LEN = 8776;
+    static constexpr uint32_t OFDM_SYMBOL_LEN_1536 = 1096;
 
     static constexpr uint32_t n_pre_samples = SHORT_CP_1536 + OFDM_SYMBOL_LEN_1536 * 2;
-  	static constexpr uint32_t n_drone_id_samples = OFDM_SYMBOL_LEN_1536 * 7 + (LONG_CP_1536 + OFDM_DATA_LEN_1536);
+    static constexpr uint32_t n_drone_id_samples = OFDM_SYMBOL_LEN_1536 * 7 + (LONG_CP_1536 + OFDM_DATA_LEN_1536);
     static constexpr uint32_t d_input_file_bit_count = 7200;
 
-  	static constexpr int64_t n_pre_samples = SHORT_CP_1536 + OFDM_SYMBOL_LEN_1536 * 2;
-  	static constexpr int64_t n_post_samples = OFDM_DATA_LEN_1536 + OFDM_SYMBOL_LEN_1536 * 4 + (LONG_CP_1536 + OFDM_DATA_LEN_1536);
-  	static constexpr int64_t n_drone_id_samples = OFDM_SYMBOL_LEN_1536 * 7 + (LONG_CP_1536 + OFDM_DATA_LEN_1536);    
+    static constexpr int64_t n_pre_samples = SHORT_CP_1536 + OFDM_SYMBOL_LEN_1536 * 2;
+    static constexpr int64_t n_post_samples = OFDM_DATA_LEN_1536 + OFDM_SYMBOL_LEN_1536 * 4 + (LONG_CP_1536 + OFDM_DATA_LEN_1536);
+    static constexpr int64_t n_drone_id_samples = OFDM_SYMBOL_LEN_1536 * 7 + (LONG_CP_1536 + OFDM_DATA_LEN_1536);    
 
     fftwf_complex *m_in, *m_out;
     fftwf_complex *m_ofdm_in, *m_ofdm_out;
 
-	fftwf_plan m_plan_fwd, m_ofdm_plan;
-	int save_complex64(const std::string filename, const std::vector<cxf_t> &vec);
+    fftwf_plan m_plan_fwd, m_ofdm_plan;
+    int save_complex64(const std::string filename, const std::vector<cxf_t> &vec);
 
 public:
-	void broadcast_signal_demodulation(std::vector<uint8_t> &bits, const std::vector<cxf_t> &samples);
-	void channel_estimation(fftwf_complex *ZC, std::vector<std::complex<float>> &h, int q);
-	void decode_QPSK(fftwf_complex *broadcast_samples, int8_t *qpsk_bits, std::vector<cxf_t> &symbols);
-	float ffo_est(cxf_t *samples);
-	void fftwf_fftshift(fftwf_complex *ZC_in_f, int N);
-	void fftshift(cxf_t *ZC_in_f, int N);
-	decoder();
-	~decoder();
-
+    void broadcast_signal_demodulation(std::vector<uint8_t> &bits, const std::vector<cxf_t> &samples);
+    void channel_estimation(fftwf_complex *ZC, std::vector<std::complex<float>> &h, int q);
+    void decode_QPSK(fftwf_complex *broadcast_samples, int8_t *qpsk_bits, std::vector<cxf_t> &symbols);
+    float ffo_est(cxf_t *samples);
+    void fftwf_fftshift(fftwf_complex *ZC_in_f, int N);
+    void fftshift(cxf_t *ZC_in_f, int N);
+    void bfftshift(std::vector<cxf_t> &vec, const int32_t direction);
+    decoder();
+    ~decoder();
 };
 
 decoder::decoder() {
- 	m_in = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * FFT_LEN_1536);
-  	m_out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * FFT_LEN_1536);	
-	m_plan_fwd = fftwf_plan_dft_1d(OCU_10MHz_ZC_LEN, m_in, m_out, FFTW_FORWARD, FFTW_ESTIMATE);
+    m_in = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * FFT_LEN_1536);
+    m_out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * FFT_LEN_1536);    
+    m_plan_fwd = fftwf_plan_dft_1d(OCU_10MHz_ZC_LEN, m_in, m_out, FFTW_FORWARD, FFTW_ESTIMATE);
 
-  	m_ofdm_in = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * OFDM_DATA_LEN_1536);
-  	m_ofdm_out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * OFDM_DATA_LEN_1536);
-  	m_ofdm_plan = fftwf_plan_dft_1d(OFDM_DATA_LEN_1536, m_ofdm_in, m_ofdm_out, FFTW_FORWARD, FFTW_MEASURE);
+    m_ofdm_in = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * OFDM_DATA_LEN_1536);
+    m_ofdm_out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * OFDM_DATA_LEN_1536);
+    m_ofdm_plan = fftwf_plan_dft_1d(OFDM_DATA_LEN_1536, m_ofdm_in, m_ofdm_out, FFTW_FORWARD, FFTW_MEASURE);
 }
 
 decoder::~decoder() {
-	fftwf_free(m_in);
-	fftwf_free(m_out);
-	fftwf_free(m_ofdm_in);
-	fftwf_free(m_ofdm_out);
+    fftwf_free(m_in);
+    fftwf_free(m_out);
+    fftwf_free(m_ofdm_in);
+    fftwf_free(m_ofdm_out);
 }
 
 int
 decoder::save_complex64(const std::string filename, const std::vector<cxf_t> &vec){
-	FILE* fp;
-	fp = fopen(filename.c_str(), "w");
-	if (!fp) {return -1;} 
-	int num = fwrite(vec.data(), sizeof(cxf_t), vec.size(), fp);
-	fclose(fp);
-	return num;	
+    FILE* fp;
+    fp = fopen(filename.c_str(), "w");
+    if (!fp) {return -1;} 
+    int num = fwrite(vec.data(), sizeof(cxf_t), vec.size(), fp);
+    fclose(fp);
+    return num; 
 }
 
 float
@@ -126,10 +152,17 @@ decoder::ffo_est(cxf_t *samples)
   volk_32fc_x2_multiply_conjugate_32fc(vec.data(), samples, samples + OFDM_DATA_LEN_1536, SHORT_CP_1536);
   
   for(int i = 0;i < SHORT_CP_1536; i++) {
-  	sum += vec[i];
+    sum += vec[i];
   }
 
   return std::atan2(sum.imag(), sum.real());
+}
+
+void 
+decoder::bfftshift(std::vector<cxf_t> &vec, const int32_t direction) {
+    // FFTW3 defines forward as -1
+    const size_t n = (vec.size() / 2) + ((vec.size() % 2) && (direction < 0));
+    std::rotate(vec.begin(), vec.begin() + n, vec.end());
 }
 
 void 
@@ -330,17 +363,17 @@ decoder::decode_QPSK(fftwf_complex *broadcast_samples, int8_t *qpsk_bits, std::v
 
 void
 decoder::bsd(fftwf_complex *s, 
-	int64_t origin_samp_rate, 
-	int64_t new_samp_rate, 
-	int64_t location, 
-	int64_t origin_len, 
-	int64_t sampling_fc, 
-	int64_t drone_id_fc, 
-	int16_t current_round, 
-	double fpga_cycles_begin)
+    int64_t origin_samp_rate, 
+    int64_t new_samp_rate, 
+    int64_t location, 
+    int64_t origin_len, 
+    int64_t sampling_fc, 
+    int64_t drone_id_fc, 
+    int16_t current_round, 
+    double fpga_cycles_begin)
 {
   double fpga_cycles_peak_location = 
-  	location * (double)origin_samp_rate / (double)new_samp_rate + fpga_cycles_begin; 
+    location * (double)origin_samp_rate / (double)new_samp_rate + fpga_cycles_begin; 
   int64_t fc_offset =  drone_id_fc - sampling_fc;
    
   float SNR;
@@ -479,7 +512,7 @@ decoder::broadcast_signal_demodulation(std::vector<uint8_t> &bits,const std::vec
   cxf_t broadcast_samples[N_BROADCAST_1536_LEN];
 
   for (uint32_t i = 0; i < N_BROADCAST_1536_LEN; i++){
-  	broadcast_samples[i] = samples[i];
+    broadcast_samples[i] = samples[i];
   }
   //memcpy(broadcast_samples_origin, s + (location - n_pre_samples) * 4, N_BROADCAST_6144_LEN*sizeof(cxf_t));
   // create to feed into the resample so that it does not need to recreate it again. in the end move to constructor of tdoa_coordinator
@@ -528,7 +561,7 @@ decoder::broadcast_signal_demodulation(std::vector<uint8_t> &bits,const std::vec
   save_complex64("syms.fc32",syms);
   bits.resize(d_input_file_bit_count);
   for(int i=0; i < d_input_file_bit_count;i++) {
-  	bits[i] = qpsk_bits[i];
+    bits[i] = qpsk_bits[i];
   }
   free(qpsk_bits);
 
@@ -618,138 +651,138 @@ readcomplex64(const std::string filename, std::vector<cxf_t> &v){
 int 
 read_complex64(const std::string filename, std::vector<cxf_t> &vec)
 {
-	FILE* fp;
-	fp = fopen(filename.c_str(), "r");
-	if (!fp) {return -1;} 
-	fseek(fp, 0, SEEK_END);
-	size_t num = ftell(fp) / sizeof(cxf_t);
-	fseek(fp, 0, SEEK_SET);
-	vec.resize(num);
-	num = fread(vec.data(), sizeof(cxf_t), num, fp);
-	fclose(fp);
-	return num;
+    FILE* fp;
+    fp = fopen(filename.c_str(), "r");
+    if (!fp) {return -1;} 
+    fseek(fp, 0, SEEK_END);
+    size_t num = ftell(fp) / sizeof(cxf_t);
+    fseek(fp, 0, SEEK_SET);
+    vec.resize(num);
+    num = fread(vec.data(), sizeof(cxf_t), num, fp);
+    fclose(fp);
+    return num;
 }
 
 int
 save_complex64(const std::string filename, const std::vector<cxf_t> &vec){
-	FILE* fp;
-	fp = fopen(filename.c_str(), "w");
-	if (!fp) {return -1;} 
-	int num = fwrite(vec.data(), sizeof(cxf_t), vec.size(), fp);
-	fclose(fp);
-	return num;	
+    FILE* fp;
+    fp = fopen(filename.c_str(), "w");
+    if (!fp) {return -1;} 
+    int num = fwrite(vec.data(), sizeof(cxf_t), vec.size(), fp);
+    fclose(fp);
+    return num; 
 }
 
 int main(int argc, char** argv){
-	std::vector<std::string> args;
-	if (argc > 1) {
-		args.assign(argv + 1, argv + argc);
-	} else {
-		std::cout << "Need an input bin file\n";
-		return 0;
-	}
-	
-	if (!std::filesystem::exists(args[0])) {
-		std::cout << "File not found: " << args[0] << "\n";
-		return 0;
-	} else {
-		std::cout << "Reading from: " << args[0] << "\n";		
-	}
+    std::vector<std::string> args;
+    if (argc > 1) {
+        args.assign(argv + 1, argv + argc);
+    } else {
+        std::cout << "Need an input bin file\n";
+        return 0;
+    }
+    
+    if (!std::filesystem::exists(args[0])) {
+        std::cout << "File not found: " << args[0] << "\n";
+        return 0;
+    } else {
+        std::cout << "Reading from: " << args[0] << "\n";       
+    }
 
     std::vector<cxf_t> samples;
     int n = read_complex64(args[0], samples);
     std::cout << "Number of raw samples read: " << samples.size() << "\n";    
     std::cout << "Sample 0: " << samples[0] << "\n";
 
-	std::vector<uint8_t> bits;
-	decoder d = decoder();
-	d.broadcast_signal_demodulation(bits, samples);
-    std::cout << "Raw number of bits: " << bits.size() << "\n";	
-	for (int i = 0; i < 17; ++i) {
-		std::cout << static_cast<int>(bits[i]) << " ";
-	}
-	std::cout << "\n";
+    std::vector<uint8_t> bits;
+    decoder d = decoder();
+    d.broadcast_signal_demodulation(bits, samples);
+    std::cout << "Raw number of bits: " << bits.size() << "\n"; 
+    for (int i = 0; i < 17; ++i) {
+        std::cout << static_cast<int>(bits[i]) << " ";
+    }
+    std::cout << "\n";
 
 
 
-	
+    
 
-	return 0;
-	/*
-	constexpr int N = 2000;
-	std::vector<cxf_t> samples(N);
+    return 0;
+    /*
+    constexpr int N = 2000;
+    std::vector<cxf_t> samples(N);
 
-	for (int i = 0; i < N; ++i)	{
-		samples[i] = ((float) i) / N + ((float) (N - i) ) / N * 1if;
-	}
-
-
-	std::cout << d.ffo_est(samples.data()) << std::endl;
-
-	constexpr int M=7;
-	fftwf_complex arr[M] = {0,0,1,1,2,2,3,3,4,4,5,5,6,6};//7,7};
-	for (int i = 0; i < M; i++){
-		std::cout << arr[i][0] << " " << arr[i][1] << "i  ";
-	}
-	std::cout << std::endl;	
-	d.fftwf_fftshift(arr, M);
-	for (int i = 0; i < M; i++){
-		std::cout << arr[i][0] << " " << arr[i][1] << "i  ";
-	}
-	std::cout << std::endl;	
+    for (int i = 0; i < N; ++i) {
+        samples[i] = ((float) i) / N + ((float) (N - i) ) / N * 1if;
+    }
 
 
-	std::vector<std::string> files;
-	for (const auto &entry: std::filesystem::directory_iterator(args[0])) {
-		files.push_back(entry.path());
-	}
+    std::cout << d.ffo_est(samples.data()) << std::endl;
 
-	for (const auto &f: files) {
-		std::cout << f << std::endl;
-	}
-	constexpr size_t L = 7200;
-	int8_t* gs = (int8_t*) malloc(L * sizeof(int8_t));
+    constexpr int M=7;
+    fftwf_complex arr[M] = {0,0,1,1,2,2,3,3,4,4,5,5,6,6};//7,7};
+    for (int i = 0; i < M; i++){
+        std::cout << arr[i][0] << " " << arr[i][1] << "i  ";
+    }
+    std::cout << std::endl; 
+    d.fftwf_fftshift(arr, M);
+    for (int i = 0; i < M; i++){
+        std::cout << arr[i][0] << " " << arr[i][1] << "i  ";
+    }
+    std::cout << std::endl; 
 
-	golden_sequence(gs);
 
-	for (int i = 0; i <= 32; ++i) {
-		std::cout << static_cast<int>(gs[i]) << " ";
-	}
-	std::cout << std::endl;
+    std::vector<std::string> files;
+    for (const auto &entry: std::filesystem::directory_iterator(args[0])) {
+        files.push_back(entry.path());
+    }
 
-	int16_t vec[8] = {1};
-	for(auto &v: vec) {
-		std::cout << v << " ";
-	}
+    for (const auto &f: files) {
+        std::cout << f << std::endl;
+    }
+    constexpr size_t L = 7200;
+    int8_t* gs = (int8_t*) malloc(L * sizeof(int8_t));
 
-	std::vector<int> vec = {1,2,3,4,5,6,7,8};
+    golden_sequence(gs);
 
-	for (auto &v: vec){
-		std::cout << v << " ";
-	}
-	std::cout << std::endl;
+    for (int i = 0; i <= 32; ++i) {
+        std::cout << static_cast<int>(gs[i]) << " ";
+    }
+    std::cout << std::endl;
 
-	int n = 5;
-	std::vector<int> data(n,0);
+    int16_t vec[8] = {1};
+    for(auto &v: vec) {
+        std::cout << v << " ";
+    }
+
+    std::vector<int> vec = {1,2,3,4,5,6,7,8};
+
+    for (auto &v: vec){
+        std::cout << v << " ";
+    }
+    std::cout << std::endl;
+
+    int n = 5;
+    std::vector<int> data(n,0);
     std::move(vec.begin(), vec.end() - n, vec.begin() + n );
     std::copy(data.begin(), data.end() , vec.begin() );
 
-	for (auto &v: vec){
-		std::cout << v << " ";
-	}
-	std::cout << std::endl;
+    for (auto &v: vec){
+        std::cout << v << " ";
+    }
+    std::cout << std::endl;
 
-	std::vector<int> v2;
-	v2.resize(3);
-	v2[4] = 1;
-	for (auto &v: v2){
-		std::cout << v << " ";
-	}
-	std::cout << std::endl;
+    std::vector<int> v2;
+    v2.resize(3);
+    v2[4] = 1;
+    for (auto &v: v2){
+        std::cout << v << " ";
+    }
+    std::cout << std::endl;
 
-	std::vector<float> y = {0.81f, 1.0f, 0.2f};
-	std::cout << toa(y) << "\n";
-	*/
+    std::vector<float> y = {0.81f, 1.0f, 0.2f};
+    std::cout << toa(y) << "\n";
+    */
 
-	return 0;
+    return 0;
 }
