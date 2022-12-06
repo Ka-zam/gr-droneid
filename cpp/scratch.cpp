@@ -4,14 +4,18 @@
 #include <filesystem>
 #include <complex>
 #include <algorithm>
+#include <chrono>
+#include <cstring>
 
 using cxf_t = std::complex<float>;
 using namespace std::complex_literals;
+typedef float fftwf_complex[2];
+
 
 //typedef float cxf_t[2];
 
 /*
-g++ -o scratch -std=c++17 -O2 scratch.cpp
+g++ -o scratch -std=c++17 -O2 -march=native scratch.cpp
 */
 void 
 golden_sequence(int8_t *gs) 
@@ -38,28 +42,44 @@ toa(const std::vector<float> &y)
     return b / (2.f * a);
 }
 
-void bfftshift(std::vector<cxf_t> &vec, const int32_t direction) {
+void 
+mfftshift(std::vector<cxf_t> &in, const int32_t direction) {
+	// FFTW3 defines forward as -1
+	const size_t n = (in.size() / 2) + ((in.size() % 2) && (direction < 0));
+	cxf_t tmp;
+  	for(int k = 0; k < n; k++)
+	{
+		memcpy(&tmp, &in[k], sizeof(cxf_t));
+		memcpy(&in[k], &in[k + n], sizeof(cxf_t));
+		memcpy(&in[k + n], &tmp, sizeof(cxf_t));
+	}	
+}
+
+void 
+bfftshift(std::vector<cxf_t> &vec, const int32_t direction) {
 	// FFTW3 defines forward as -1
 	const size_t n = (vec.size() / 2) + ((vec.size() % 2) && (direction < 0));
 	std::rotate(vec.begin(), vec.begin() + n, vec.end());
 }
 
-void
-fftshift(std::vector<cxf_t> &vec){
-	const size_t n = (vec.size() / 2) + ((vec.size() % 2));
-	std::rotate(vec.begin(), vec.begin() + n, vec.end());
+void 
+fftwf_fftshift(fftwf_complex *in, int N)
+{
+  fftwf_complex tmp;
+  int c = N / 2;
+  for(int k = 0; k < c; k++)
+  {
+    memcpy(&tmp, in + k, sizeof(fftwf_complex));
+    memcpy(in + k, in + k + c, sizeof(fftwf_complex));
+    memcpy(in + k + c, &tmp, sizeof(fftwf_complex));
+  }
 }
 
-void
-ifftshift(std::vector<cxf_t> &vec){
-	size_t n = vec.size() / 2;
-	std::rotate(vec.begin(), vec.begin() + n, vec.end());
-}
 
 int 
 main(int argc, char** argv)
 {
-	constexpr int N = 9;
+	constexpr int N = 500000;
 	std::vector<cxf_t> samples(N);
 	std::vector<cxf_t> tmp(N);
 
@@ -68,8 +88,16 @@ main(int argc, char** argv)
 	}
 	tmp = samples;
 
+
+
+	samples = tmp;
+	auto start = std::chrono::high_resolution_clock::now();
+	bfftshift(samples, -1);
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = (end - start);
+    auto us = std::chrono::duration_cast<std::chrono::microseconds>(duration); // Microsecond (as int)
+	std::cout << "bfftshift fwd: " << us.count() << " us\n";
 	/*
-	std::cout << "original     : ";
 	for (auto &v: samples){
 		std::cout << v << " ";
 	}
@@ -77,37 +105,32 @@ main(int argc, char** argv)
 	*/
 	
 	samples = tmp;
-	fftshift(samples);
-	std::cout << "fftshift     : ";
+	start = std::chrono::high_resolution_clock::now();
+	fftwf_fftshift((fftwf_complex*) samples.data(), samples.size());
+    end = std::chrono::high_resolution_clock::now();
+    duration = (end - start);
+    us = std::chrono::duration_cast<std::chrono::microseconds>(duration); // Microsecond (as int)	
+	std::cout << "fftwf_fftshift: " << us.count() << " us\n";
+	/*
 	for (auto &v: samples){
 		std::cout << v << " ";
 	}
 	std::cout << std::endl;
+	*/
 
 	samples = tmp;
-	bfftshift(samples, -1);
-	std::cout << "bfftshift fwd: ";
+	start = std::chrono::high_resolution_clock::now();
+	mfftshift(samples, -1);
+    end = std::chrono::high_resolution_clock::now();
+    duration = (end - start);
+    us = std::chrono::duration_cast<std::chrono::microseconds>(duration); // Microsecond (as int)	
+	std::cout << "mfftshift: " << us.count() << " us\n";
+	/*
 	for (auto &v: samples){
 		std::cout << v << " ";
 	}
 	std::cout << std::endl;
-	
-
-	samples = tmp;
-	ifftshift(samples);
-	std::cout << "ifftshift    : ";
-	for (auto &v: samples){
-		std::cout << v << " ";
-	}
-	std::cout << std::endl;
-	
-	samples = tmp;
-	bfftshift(samples, 1);
-	std::cout << "bfftshift rev: ";
-	for (auto &v: samples){
-		std::cout << v << " ";
-	}
-	std::cout << std::endl;
+	*/	
 
 	return 0;
 	/*
