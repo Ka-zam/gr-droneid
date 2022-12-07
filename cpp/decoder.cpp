@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <cstring>
 #include <string>
+#include <algorithm>
 
 #include <volk/volk.h>
 #include <fftw3.h>
@@ -16,8 +17,30 @@ using namespace std::complex_literals;
 //typedef float fftwf_complex[2];
 
 /*
-g++ -o decoder -std=c++17 -O2 decoder.cpp -lvolk
+g++ -o decoder -std=c++17 -O3 -mavx2 -march=native decoder.cpp -lvolk -lfftw3f
 */
+
+std::vector<uint8_t>
+golden_sequence2() 
+{
+  constexpr uint32_t M = 1600;
+  constexpr uint32_t N = 7200;
+  std::vector<uint8_t> res(N);
+
+  uint8_t x1[N + M + 31] = {1};
+  uint8_t x2[N + M + 31] = {0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0};
+  
+  for(uint32_t i = 0; i < N + M; i++) {
+    x1[i + 31] = (x1[i + 3] + x1[i]) % 2;
+    x2[i + 31] = (x2[i + 3] + x2[i + 2] + x2[i + 1] + x2[i]) % 2;
+  }
+
+  for(int i = 0; i < N; i++) {
+    res[i] = (x1[i + M] + x2[i + M]) % 2;
+  }
+  return res;
+}
+
 void
 golden_sequence(int8_t *gs) 
 {
@@ -25,12 +48,12 @@ golden_sequence(int8_t *gs)
   constexpr int l = 7200;
   int8_t x1[l + nc + 31] = {1};
   int8_t x2[l + nc + 31] = {0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0};
-  for(int i=0;i<l+nc;i++) {
+  for(int i = 0; i < l + nc; i++) {
     x1[i + 31] = (x1[i + 3] + x1[i]) % 2;
     x2[i + 31] = (x2[i + 3] + x2[i + 2] + x2[i + 1] + x2[i]) % 2;
   }
 
-  for(int i=0; i < l; i++) {
+  for(int i = 0; i < l; i++) {
     gs[i] = (x1[i + nc] + x2[i + nc]) % 2;
   }
 }
@@ -44,19 +67,18 @@ toa(const std::vector<float> &y)
 }
 
 /*
-
 Metadata in:
-    1. Sample rate
-    2. Fc
-    3. Sample number
-    4. Time stamp relative start of buffer
+  1. Sample rate
+  2. FC
+  3. Sample number
+  4. Time stamp relative start of buffer
 
 Decoding steps:
   1.  Channelization
   2.  Downsampling
   3.  Low pass filtering
   4.  Integer Frequency Offset
-  5.  Find STO and resample
+  5.  Find STO, SCO and resample
   6.  CFO estimate
   7.  OFDM symbol extraction
   8.  Channel estimate
@@ -64,56 +86,56 @@ Decoding steps:
   10. Demodulate QPSK
   11. Descramble
   12. Apply turbo coder (w/ QPSK load bearing constants)
+  13. CRC check
 
 Metadata out:
-    1. Fc
-    2. CFO
-    3. TOA
-    4. SNR
-    5. STO
-    6. SCO
-    7. Channel estimate
-    8. FEC corrected error list
+  1. FC
+  2. CFO
+  3. TOA
+  4. SNR
+  5. STO
+  6. SCO
+  7. Channel estimate
+  8. FEC corrected error list
+  9. CRC residual
 */
 
 class decoder
 {
-private:
-    static constexpr uint32_t SHORT_CP_1536 = 72;
-    static constexpr uint32_t LONG_CP_1536 = 80;
-    static constexpr uint32_t OFDM_DATA_LEN_1536 = 1024;
-    static constexpr uint32_t N_ZC_1536 = 601;
-    static constexpr uint32_t N_LEFT_GUARD_SUBCARRIERS_1536 = 212;
-    static constexpr uint32_t OCU_10MHz_ZC_LEN = 1024;
-    static constexpr uint32_t FFT_LEN_1536 = 16384;
-    static constexpr uint32_t N_BROADCAST_6144_LEN = 35104;
-    static constexpr uint32_t N_BROADCAST_1536_LEN = 8776;
-    static constexpr uint32_t OFDM_SYMBOL_LEN_1536 = 1096;
+  private:
+      static constexpr uint32_t SHORT_CP_1536 = 72;
+      static constexpr uint32_t LONG_CP_1536 = 80;
+      static constexpr uint32_t OFDM_DATA_LEN_1536 = 1024;
+      static constexpr uint32_t N_ZC_1536 = 601;
+      static constexpr uint32_t N_LEFT_GUARD_SUBCARRIERS_1536 = 212;
+      static constexpr uint32_t OCU_10MHz_ZC_LEN = 1024;
+      static constexpr uint32_t FFT_LEN_1536 = 16384;
+      static constexpr uint32_t N_BROADCAST_6144_LEN = 35104;
+      static constexpr uint32_t N_BROADCAST_1536_LEN = 8776;
+      static constexpr uint32_t OFDM_SYMBOL_LEN_1536 = 1096;
 
-    static constexpr uint32_t n_pre_samples = SHORT_CP_1536 + OFDM_SYMBOL_LEN_1536 * 2;
-    static constexpr uint32_t n_drone_id_samples = OFDM_SYMBOL_LEN_1536 * 7 + (LONG_CP_1536 + OFDM_DATA_LEN_1536);
-    static constexpr uint32_t d_input_file_bit_count = 7200;
+      static constexpr uint32_t n_pre_samples = SHORT_CP_1536 + OFDM_SYMBOL_LEN_1536 * 2;
+      static constexpr uint32_t n_drone_id_samples = OFDM_SYMBOL_LEN_1536 * 7 + (LONG_CP_1536 + OFDM_DATA_LEN_1536);
+      static constexpr uint32_t d_input_file_bit_count = 7200;
 
-    static constexpr int64_t n_pre_samples = SHORT_CP_1536 + OFDM_SYMBOL_LEN_1536 * 2;
-    static constexpr int64_t n_post_samples = OFDM_DATA_LEN_1536 + OFDM_SYMBOL_LEN_1536 * 4 + (LONG_CP_1536 + OFDM_DATA_LEN_1536);
-    static constexpr int64_t n_drone_id_samples = OFDM_SYMBOL_LEN_1536 * 7 + (LONG_CP_1536 + OFDM_DATA_LEN_1536);    
+      static constexpr int64_t n_post_samples = OFDM_DATA_LEN_1536 + OFDM_SYMBOL_LEN_1536 * 4 + (LONG_CP_1536 + OFDM_DATA_LEN_1536);
 
-    fftwf_complex *m_in, *m_out;
-    fftwf_complex *m_ofdm_in, *m_ofdm_out;
+      fftwf_complex *m_in, *m_out;
+      fftwf_complex *m_ofdm_in, *m_ofdm_out;
 
-    fftwf_plan m_plan_fwd, m_ofdm_plan;
-    int save_complex64(const std::string filename, const std::vector<cxf_t> &vec);
+      fftwf_plan m_plan_fwd, m_ofdm_plan;
+      int save_complex64(const std::string filename, const std::vector<cxf_t> &vec);
 
-public:
-    void broadcast_signal_demodulation(std::vector<uint8_t> &bits, const std::vector<cxf_t> &samples);
-    void channel_estimation(fftwf_complex *ZC, std::vector<std::complex<float>> &h, int q);
-    void decode_QPSK(fftwf_complex *broadcast_samples, int8_t *qpsk_bits, std::vector<cxf_t> &symbols);
-    float ffo_est(cxf_t *samples);
-    void fftwf_fftshift(fftwf_complex *ZC_in_f, int N);
-    void fftshift(cxf_t *ZC_in_f, int N);
-    void bfftshift(std::vector<cxf_t> &vec, const int32_t direction);
-    decoder();
-    ~decoder();
+  public:
+      void broadcast_signal_demodulation(std::vector<uint8_t> &bits, const std::vector<cxf_t> &samples);
+      void channel_estimation(fftwf_complex *ZC, std::vector<std::complex<float>> &h, int q);
+      void decode_QPSK(fftwf_complex *broadcast_samples, int8_t *qpsk_bits, std::vector<cxf_t> &symbols);
+      float ffo_est(cxf_t *samples);
+      void fftwf_fftshift(fftwf_complex *ZC_in_f, int N);
+      void fftshift(cxf_t *ZC_in_f, int N);
+      void bfftshift(std::vector<cxf_t> &vec, const int32_t direction);
+      decoder();
+      ~decoder();
 };
 
 decoder::decoder() {
@@ -361,8 +383,10 @@ decoder::decode_QPSK(fftwf_complex *broadcast_samples, int8_t *qpsk_bits, std::v
   }
 }
 
+/*
+
 void
-decoder::bsd(fftwf_complex *s, 
+bsd(fftwf_complex *s, 
     int64_t origin_samp_rate, 
     int64_t new_samp_rate, 
     int64_t location, 
@@ -492,6 +516,7 @@ decoder::bsd(fftwf_complex *s,
   free_tdec(turbo_decoder);
   lte_rate_matcher_free(rate_matcher);
 }
+*/
 
 
 void 
@@ -674,6 +699,25 @@ save_complex64(const std::string filename, const std::vector<cxf_t> &vec){
 }
 
 int main(int argc, char** argv){
+  std::vector<uint8_t> gs2 = golden_sequence2();
+  int8_t gs[7200];
+  golden_sequence(gs);
+
+  int error = 0;
+  for (int i = 0; i < gs2.size(); ++i)
+  {
+    if (gs[i] != gs2[i]) {
+      std::cout << "fail at: " << i << "\n";
+      error++;
+    }
+  }
+  std::cout << "errors: " << error << "\n";
+
+  return 0;
+
+
+
+
     std::vector<std::string> args;
     if (argc > 1) {
         args.assign(argv + 1, argv + argc);
