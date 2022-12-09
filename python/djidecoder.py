@@ -49,11 +49,11 @@ class djidecoder:
         self.droneid["zc_root_symbol_6"] = 147
         self.droneid["cp_seq"]           = [1, 0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
         self.droneid["models"]           = { 16: "Mavic Pro", 41: "Mavic 2", 61: "DJI FPV", 63: "Mini 2", 68: "Mavic 3" }
-        self.taps4 = self.filter_taps(symbol=4)
-        self.taps6 = self.filter_taps(symbol=6)
         self.long_cp_len = 80
         self.short_cp_len = 72
         self.ofdm_symbol_len = 1024
+        self.taps4 = self.filter_taps(symbol=4)
+        self.taps6 = self.filter_taps(symbol=6)
 
     def integer_frequency_offset(self, data):
         return None
@@ -63,12 +63,15 @@ class djidecoder:
         # 
         return None
 
-    def estimate_integer_freq(self, data, window_len=20):
+    def estimate_integer_freq(self, data, window=20):
+        if window < 1:
+            return None
         idx = np.min( self.first_baseband_sample(data))
         symbol4 = data[idx: idx + self.ofdm_symbol_len]
         S4 = np.fft.fftshift(np.fft.fft(symbol4))
-        idx = np.argmax( np.abs(S4[self.ofdm_symbol_len // 2 - window_len: self.ofdm_symbol_len // 2 + window_len + 1]))
-        return (self.ofdm_symbol_len + window_len) // 2 - idx - 1
+        dc_idx = self.ofdm_symbol_len // 2
+        idx = np.argmin(np.abs(S4[dc_idx - window: dc_idx + window]))
+        return idx - window
 
     def first_baseband_sample(self,data):
         # Return index of first sample in baseband
@@ -96,7 +99,7 @@ class djidecoder:
         else:
             return None
 
-        n = 1024
+        n = self.ofdm_symbol_len
         guard_carriers = n - self.droneid["data_carriers"]
         lguard = guard_carriers // 2
 
