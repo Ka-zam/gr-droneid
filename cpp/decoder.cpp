@@ -29,7 +29,14 @@ golden_sequence2()
 
   uint8_t x1[N + M + 31] = {1};
   uint8_t x2[N + M + 31] = {0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0};
-  
+
+  for (int i=0; i < 32; i++)
+    std::cout << (uint32_t) x1[i] << " ";
+  std::cout << "\n";
+  for (int i=0; i < 32; i++)
+    std::cout << (uint32_t) x2[i] << " ";
+  std::cout << "\n";  
+
   for(uint32_t i = 0; i < N + M; i++) {
     x1[i + 31] = (x1[i + 3] + x1[i]) % 2;
     x2[i + 31] = (x2[i + 3] + x2[i + 2] + x2[i + 1] + x2[i]) % 2;
@@ -61,9 +68,10 @@ golden_sequence(int8_t *gs)
 float
 toa(const std::vector<float> &y) 
 {
-    const float a = .5f * (y[0] - y[2]) + y[1] - y[0];
-    const float b = y[1] - y[0] + a;
-    return b / (2.f * a);
+  // Assuming y[1] is the maximum value, return x_max
+  const float a = .5f * (y[0] - y[2]) + y[1] - y[0];
+  const float b = y[1] - y[0] + a;
+  return b / (2.f * a);
 }
 
 /*

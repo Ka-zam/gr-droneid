@@ -64,6 +64,7 @@ def frame_crc(data):
     crc[0] = ((res >> 16) & 0xff);
     crc[1] = ((res >>  8) & 0xff);
     crc[2] = ((res >>  0) & 0xff);
+    #print(crc.hex())
     return crc
 
 def payload_crc(data):
