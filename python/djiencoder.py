@@ -116,7 +116,7 @@ def msg_to_baseband(msg_dict={}, samp_rate=15.36e6):
     gs = golden_sequence()
     bits = scramble(bits, gs)
     syms = bits_to_qpsk(bits)
-    bb = baseband(syms, samp_rate)
+    bb = baseband(syms, samp_rate, print_idx=True)
     return bb
 
 def msg_to_bits(msg_dict={}):
@@ -155,7 +155,7 @@ def bits_to_qpsk(bits):
         s += 1                       
     return np.sqrt(.5) * symbols
 
-def baseband(qpsk_symbols, samp_rate):
+def baseband(qpsk_symbols, samp_rate,print_idx=False):
     N_sym = droneid["symbols"]
     L_sym = droneid["data_carriers"]
     N_fft = fft_size(samp_rate)
@@ -196,6 +196,8 @@ def baseband(qpsk_symbols, samp_rate):
     # Add cyclic prefix
     idx = 0
     for s in range(N_sym):
+        if print_idx:
+            print("Symbol {} starts at index {}".format(s + 1, idx))
         cp_len = cp_schedule[s]
         cp = ofdm_symbols_time[s, -cp_len:]
         sym = ofdm_symbols_time[s, :]
