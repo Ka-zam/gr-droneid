@@ -116,7 +116,7 @@ def msg_to_baseband(msg_dict={}, samp_rate=15.36e6):
     gs = golden_sequence()
     bits = scramble(bits, gs)
     syms = bits_to_qpsk(bits)
-    bb = baseband(syms, samp_rate, print_idx=True)
+    bb = baseband(syms, samp_rate, print_idx=False)
     return bb
 
 def msg_to_bits(msg_dict={}):

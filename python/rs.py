@@ -3,7 +3,7 @@ from struct import pack
 import datetime
 now = datetime.datetime.now
 
-def makefile(bb, samp_rate, period_ms=10, sro_ppm=0):
+def makefile(bb, samp_rate=15.36e6, period_ms=10, sro_ppm=0):
     # Make the first file an even period_ms in length
     if period_ms < 1:
         print("Minimum period is 1ms")

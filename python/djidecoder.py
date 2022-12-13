@@ -39,7 +39,7 @@ from sys import argv, exit
 #   8. FEC corrected error list
 #   9. CRC residual
 
-class djidecoder:
+class djidecoder: 
     def __init__(self):
         self.frame_crc_fct = mkCrcFun(0x1864cfb, 0x00, False, 0x00) # returns integer
         self.droneid = {}
@@ -57,15 +57,72 @@ class djidecoder:
         self.taps4 = self.filter_taps(symbol=4)
         self.taps6 = self.filter_taps(symbol=6)
         self.indices = self.data_indices()
+        self.gs = self.golden_sequence()
         self.baud_rate = 15.36e6
+        self.libdt = ct.cdll.LoadLibrary("libdt.so")
+        self.libdt.dt_turbo_rev.restype  = ct.c_uint64
+        self.libdt.dt_turbo_rev.argtypes = [ct.POINTER(ct.c_uint8), ct.POINTER(ct.c_uint8)]
+        self.libdt.dt_turbo_rev_soft.restype  = ct.c_uint64
+        self.libdt.dt_turbo_rev_soft.argtypes = [ct.POINTER(ct.c_uint8), ct.POINTER(ct.c_int8)]
+    
+    def turbo_rev_soft(self, frame):
+        if len(frame) != 7200:
+            return None
+        elif type(frame) != np.int8:
+            return None
+        msg = np.ndarray(176, dtype=np.uint8)
+        res = self.libdt.dt_turbo_rev_soft(msg.ctypes.data_as(ct.POINTER(ct.c_uint8)), frame.ctypes.data_as(ct.POINTER(ct.c_int8)))
+        status = np.int32(np.uint32(res >> 32))
+        crc = res & 0xffffffff
+        return msg
 
-    def demodulate_hard(self, qpsk_syms):
-        #bits = 
-        # samp_rate = 15.36e6
-        # 
-        return None
+    def turbo_rev_hard(self, frame):
+        if len(frame) != 7200:
+            return None
+        elif type(frame) != np.ndarray and frame.dtype != np.uint8:
+            return None
+        msg = np.ndarray(176, dtype=np.uint8)
+        res = self.libdt.dt_turbo_rev(msg.ctypes.data_as(ct.POINTER(ct.c_uint8)), frame.ctypes.data_as(ct.POINTER(ct.c_uint8)))
+        status = np.int32(np.uint32(res >> 32))
+        crc = res & 0xffffffff
+        return msg       
+
+    def demodulate_qpsk_soft(self, qpsk_syms):
+        # Scale to TurboFEC integer
+        bits = np.ndarray(7200, dtype=np.int8)
+        int_max = 63
+
+        ptr = 0
+        for s in range(qpsk_syms.shape[0]):
+            if s == 2 or s == 4:
+                pass
+            else:
+                scale = 1. / (np.std(qpsk_syms[s,:]) * np.sqrt(.5))
+                qpsk_syms[s,:] *= scale
+                for q in qpsk_syms[s,:]:
+                    bits[ptr] = np.int8(np.round( -np.real(q) * int_max))
+                    ptr += 1
+                    bits[ptr] = np.int8(np.round( -np.imag(q) * int_max))
+                    ptr += 1
+
+        return bits.clip(-int_max, int_max)
+
+    def demodulate_qpsk_hard(self, qpsk_syms):
+        bits = np.ndarray(7200, dtype=np.uint8)
+        ptr = 0
+        for s in range(qpsk_syms.shape[0]):
+            if s == 2 or s == 4:
+                pass
+            else:
+                for q in qpsk_syms[s,:]:
+                    bits[ptr] = np.real(q) < 0.
+                    ptr += 1
+                    bits[ptr] = np.imag(q) < 0.
+                    ptr += 1
+        return bits
 
     def qpsk_symbols(self, fd_syms):
+        syms = np.zeros((self.droneid["symbols"], len(self.indices)), dtype=np.complex128)
         for r in range( fd_syms.shape[0]):
             syms[r,:] = fd_syms[r,self.indices]
         return syms
@@ -81,27 +138,30 @@ class djidecoder:
         syms = np.zeros((self.droneid["symbols"], self.ofdm_symbol_len), dtype=np.complex128)
         cp_seq = self.droneid["cp_seq"][-self.droneid["symbols"]:]
         idx = 0
-        for s in range(self.droneid["symbols"]):
-            idx += cp_seq[s]
-            syms[s,:] = data[idx: idx + self.ofdm_symbol_len]
+        for r in range(self.droneid["symbols"]):
+            idx += cp_seq[r]
+            #print("symbol: {}   idx: {}".format(r,idx))
+            syms[r,:] = data[idx: idx + self.ofdm_symbol_len]
             idx += self.ofdm_symbol_len
         return syms
 
-    def integer_frequency_estimate(self, data, start_idx, window=20):
+    def integer_frequency_estimate(self, data, start_idx=0, window=20):
         if window < 1:
             return None
-        s4 = data[start_idx: start_idx + self.ofdm_symbol_len]
-        S4 = np.fft.fftshift(np.fft.fft(s4))
+        first_zc_idx = 2 * (self.short_cp_len + self.ofdm_symbol_len) + self.short_cp_len
+        start_idx += first_zc_idx
+        first_zc_td = data[start_idx: start_idx + self.ofdm_symbol_len]
+        first_zc_fd = np.fft.fftshift(np.fft.fft(first_zc_td))
         dc_idx = self.ofdm_symbol_len // 2
-        idx = np.argmin(np.abs(S4[dc_idx - window : dc_idx + window]))
+        idx = np.argmin(np.abs(first_zc_fd[dc_idx - window : dc_idx + window]))
         return idx - window
 
-    def fractional_frequency_estimate(self, data, start_idx):
-        symbol4_idx = 3 * (self.short_cp_len + self.ofdm_symbol_len)
-        start_idx += symbol4_idx
-        s4 = data[start_idx: start_idx + self.ofdm_symbol_len + self.short_cp_len]
-        cp_pre = s4[:self.short_cp_len]
-        cp_post = s4[-self.short_cp_len:]
+    def fractional_frequency_estimate(self, data, start_idx=0):
+        first_zc_idx = 2 * (self.short_cp_len + self.ofdm_symbol_len)
+        start_idx += first_zc_idx
+        first_zc_td = data[start_idx: start_idx + self.short_cp_len + self.ofdm_symbol_len ]
+        cp_pre = first_zc_td[:self.short_cp_len]
+        cp_post = first_zc_td[-self.short_cp_len:]
         offset_rad = np.angle( np.dot(cp_pre, np.conj(cp_post))) / self.ofdm_symbol_len
         offset_hz = offset_rad * self.baud_rate / (2. * np.pi)
         return offset_rad
@@ -109,11 +169,12 @@ class djidecoder:
     def first_baseband_sample(self, data):
         # Return index of first sample in baseband
         #  filter data with both symbols
-        #  
-        symbol4_idx = 3 * (self.short_cp_len + self.ofdm_symbol_len)
-        symbol6_idx = 5 * (self.short_cp_len + self.ofdm_symbol_len)
-        idx4_est = np.argmax( np.abs(np.convolve(data, self.taps4))) - symbol4_idx
-        idx6_est = np.argmax( np.abs(np.convolve(data, self.taps6))) - symbol6_idx
+        first_zc_idx = 2 * (self.short_cp_len + self.ofdm_symbol_len)
+        second_zc_idx = 4 * (self.short_cp_len + self.ofdm_symbol_len)
+        idx4_est  = np.argmax( np.abs(np.convolve(data, self.taps4)))
+        idx4_est -= first_zc_idx + len(self.taps4) + self.short_cp_len
+        idx6_est  = np.argmax( np.abs(np.convolve(data, self.taps6)))
+        idx6_est -= second_zc_idx + len(self.taps6) + self.short_cp_len
         return (idx4_est, idx6_est)
 
     def filter(self, data, symbol=4):
@@ -153,7 +214,44 @@ class djidecoder:
         # Build a list of indices, DC excluded
         indices  = [i for i in range(idx_dc - N_left, idx_dc)              ]
         indices += [i for i in range(idx_dc + 1     , idx_dc + N_right + 1)]
-        return indices        
+        return indices
+
+    def descramble(self, bits):
+        M_pn = 7200
+        if len(bits) != M_pn:
+            return None
+        else:
+            for idx in range(M_pn):
+                bits[idx] ^= self.gs[idx]
+            return bits
+
+    def golden_sequence(self, x2_init=None):
+        x1_init = bytes([1,] + [0,] * 30)
+        if x2_init is None:
+            # 0x12345678 in reverse order. Magic. Leave out leading 0.
+            x2_init = bytes([0,0,1,0,0,1,0,0,0,1,1,0,1,0,0,0,1,0,1,0,1,1,0,0,1,1,1,1,0,0,0])
+            x2_init = x2_init[::-1]
+        elif len(x2_init) != len(x1_init):
+            return None
+
+        reg_len = len(x1_init)
+        M_pn = 7200 # As defined in 36.211 7.2
+        Nc = 1600 
+
+        x1 = bytearray(Nc + M_pn + len(x1_init))
+        x2 = bytearray(Nc + M_pn + len(x2_init))
+        gs = bytearray(M_pn)
+
+        x1[:reg_len] = x1_init
+        x2[:reg_len] = x2_init
+
+        for idx in range(M_pn + Nc):
+            x1[idx + reg_len] = (x1[idx + 3] + x1[idx]) % 2
+            x2[idx + reg_len] = (x2[idx + 3] + x2[idx + 2] + x2[idx + 1] + x2[idx]) % 2
+
+        for idx in range(M_pn):
+            gs[idx] = (x1[idx + Nc] + x2[idx + Nc]) % 2
+        return gs           
 
 if __name__ == '__main__':
     #import matplotlib.pyplot as plt
@@ -168,9 +266,28 @@ if __name__ == '__main__':
     #plt.plot(np.real(data))
     #plt.show()
     idx = d.first_baseband_sample(data)
-    print("Baseband start detected at: {}".format(idx))
-    ifo = d.estimate_integer_freq(data,np.min(idx))
-    print("Integer frequency offset: {}".format(ifo))
-    #(cfo, data)
+    print("Baseband start detected at  : {}".format(idx))
+    data = data[idx[0]:]
+    
+    ifo = d.integer_frequency_estimate(data)
+    print("Integer frequency offset    : {}".format(ifo))
+    
+    ffo = d.fractional_frequency_estimate(data)
+    print("Fractional frequency offset : {}".format(ffo))
 
-
+    syms_td = d.time_domain_symbols(data)
+    syms_fd = d.frequency_domain_symbols(syms_td)
+    syms_qpsk = d.qpsk_symbols(syms_fd)
+    bits = d.demodulate_qpsk_hard(syms_qpsk)
+    print("Demodulated bits            : {}".format(len(bits)))
+    bits = d.descramble(bits)
+    print("Descrambled bits            : {}".format(len(bits)))
+    msg = d.turbo_rev_hard(bits)
+    msg = bytes(msg)
+    serial = msg[7: 7+16]
+    rx_crc = msg[-3:]
+    cmp_crc = d.frame_crc_fct(msg[:173])
+    print("Serial                      : {}".format(serial))
+    print("Received CRC                : {}".format(rx_crc.hex()))
+    print("Computed CRC                : {:02x}".format(cmp_crc))
+    print("Decoder status              : {}".format(["Failure", "Success", ][cmp_crc == int.from_bytes(rx_crc, "big")] ))

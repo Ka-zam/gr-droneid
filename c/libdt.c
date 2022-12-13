@@ -1,10 +1,11 @@
 /*
+Needs:
+https://github.com/ttsou/turbofec
 
 Install:
 gcc -g -shared -o libdt.so -O2 -march=native -fPIC libdt.c -I/usr/local/include -L/usr/local/lib -lturbofec
 sudo cp libdt.so /usr/local/lib
 sudo ldconfig
-
 */
 
 //#include <stdio.h>
@@ -205,6 +206,41 @@ dt_turbo_rev(uint8_t* out, uint8_t* msg) {
         out, d1, d2, d3);
 
   	uint32_t crc_res = crc(out, REV_PAYLOAD_BYTE_CNT);
+    
+    res = ((status & 0x00000000FFFFFFFFUL) << 32) | (crc_res & 0x00000000FFFFFFFFUL);
+    free(soft_msg);
+    dt_free_rev();
+    return res;
+}
+
+uint64_t
+dt_turbo_rev_soft(uint8_t* out, int8_t* msg) {
+    //  out must be able to hold 176 bytes
+    //  in must be of length 7200
+    //
+    uint64_t res = 0x00;
+    dt_allocate_rev();
+
+    int8_t* soft_msg = (int8_t*) malloc(TURBO_OUT_LEN);
+    for (int i = 0; i < TURBO_OUT_LEN; ++i) {
+        soft_msg[i] = msg[i];
+    }
+
+    // Setup IO sizes and buffers
+    struct lte_rate_matcher_io rm_io = {
+        .D = REV_TURBO_BIT_CNT,
+        .E = TURBO_OUT_LEN,
+        .d = {d1, d2, d3},
+        .e = soft_msg,
+    };
+
+    lte_rate_match_rv(dt_rate_matcher, &rm_io, 0);
+    int status = lte_turbo_decode(dt_tdecoder, 
+        REV_PAYLOAD_BIT_CNT, 
+        REV_TURBO_ITERATIONS,
+        out, d1, d2, d3);
+
+    uint32_t crc_res = crc(out, REV_PAYLOAD_BYTE_CNT);
     
     res = ((status & 0x00000000FFFFFFFFUL) << 32) | (crc_res & 0x00000000FFFFFFFFUL);
     free(soft_msg);
