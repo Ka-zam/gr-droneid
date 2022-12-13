@@ -278,16 +278,20 @@ if __name__ == '__main__':
     syms_td = d.time_domain_symbols(data)
     syms_fd = d.frequency_domain_symbols(syms_td)
     syms_qpsk = d.qpsk_symbols(syms_fd)
-    bits = d.demodulate_qpsk_hard(syms_qpsk)
-    print("Demodulated bits            : {}".format(len(bits)))
-    bits = d.descramble(bits)
-    print("Descrambled bits            : {}".format(len(bits)))
-    msg = d.turbo_rev_hard(bits)
-    msg = bytes(msg)
-    serial = msg[7: 7+16]
-    rx_crc = msg[-3:]
-    cmp_crc = d.frame_crc_fct(msg[:173])
-    print("Serial                      : {}".format(serial))
+    hard_bits = d.demodulate_qpsk_hard(syms_qpsk)
+    soft_bits = d.demodulate_qpsk_soft(syms_qpsk)
+    print("Demodulated bits            : {}".format(len(hard_bits)))
+    hard_bits = d.descramble(hard_bits)
+    print("Descrambled bits            : {}".format(len(hard_bits)))
+    hard_msg = d.turbo_rev_hard(hard_bits)
+    hard_msg = bytes(hard_msg)
+
+    serial = hard_msg[7: 7 + 16]
+    uuid = hard_msg[69: 69 + 19]
+    rx_crc = hard_msg[-3:]
+    cmp_crc = d.frame_crc_fct(hard_msg[:173])
+    print("Serial                      : >{:16s}<".format(serial.decode()))
+    print("UUID                        : >{:19s}<".format(uuid.decode()))
     print("Received CRC                : {}".format(rx_crc.hex()))
     print("Computed CRC                : {:02x}".format(cmp_crc))
     print("Decoder status              : {}".format(["Failure", "Success", ][cmp_crc == int.from_bytes(rx_crc, "big")] ))
