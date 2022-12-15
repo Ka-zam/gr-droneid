@@ -272,7 +272,33 @@ class djidecoder:
 
         for idx in range(M_pn):
             gs[idx] = (x1[idx + Nc] + x2[idx + Nc]) % 2
-        return gs           
+        return gs
+
+    def decode(self, data, equalize=False):
+        idx = self.first_baseband_sample(data)
+        if idx[0] != idx[1]:
+            return None
+        # Strip data
+        data = data[idx[0]:]
+        idx = self.first_baseband_sample(data)
+        ifo = self.integer_frequency_estimate(data)    
+        ffo = self.fractional_frequency_estimate(data)
+        syms_td = self.time_domain_symbols(data)
+        syms_fd = self.frequency_domain_symbols(syms_td)
+        syms_qpsk = self.qpsk_symbols(syms_fd)    
+        if equalize:
+            ch4_est = self.channel_estimate(syms_fd[2,:], 'naive')
+            self.channel_equalize(syms_qpsk, ch4_est)
+
+        raw_bits = self.demodulate_qpsk_hard(syms_qpsk)
+        descrambled_bits = self.descramble(raw_bits)
+        payload = bytes(self.turbo_rev_hard(descrambled_bits))
+        res = {}
+        res["payload"] = payload
+        res["raw_bits"] = raw_bits
+        res["descrambled_bits"] = descrambled_bits
+        res["idx"] = idx
+        return res
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt

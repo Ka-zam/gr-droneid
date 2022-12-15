@@ -57,19 +57,20 @@ class djiencoder:
         # 1 added from the left to poly
         self.frame_crc_fct = mkCrcFun(0x1864cfb, 0x00, False, 0x00) # returns integer
         self.gs = self.golden_sequence()
+        self.indices = self.data_indices()
 
     def msg_to_signal(self, snr_db=20, msg_dict={}, samp_rate=15.36e6):
         bb = self.msg_to_baseband(msg_dict, samp_rate)
         pre = np.zeros(1000, dtype=np.complex128)
         post = np.zeros(1000, dtype=np.complex128)
         sig = np.concatenate([pre, bb, post])
-        sig_pwr = 10*np.log10(np.var(bb))
-        print("Signal power : {:7.2f}".format(sig_pwr))
+        sig_pwr = 10 * np.log10(np.var(bb))
+        # print("Signal power : {:7.2f}".format(sig_pwr))
         nse = self.cnoise(len(sig), sig_pwr - snr_db)
-        nse_pwr = 10*np.log10(np.var(nse))
-        print("Noise power  : {:7.2f}".format(nse_pwr))
-        tot_pwr = 10*np.log10(np.var(nse + sig))
-        print("Total power  : {:7.2f}".format(tot_pwr))
+        nse_pwr = 10 * np.log10(np.var(nse))
+        # print("Noise power  : {:7.2f}".format(nse_pwr))
+        tot_pwr = 10 * np.log10(np.var(nse + sig))
+        # print("Total power  : {:7.2f}".format(tot_pwr))
         sig += nse
         sig /= np.max([np.max(np.real(sig)), np.max(np.imag(sig))])
         return sig
@@ -131,7 +132,7 @@ class djiencoder:
                 ofdm_symbols[s, :] = qpsk_symbols[idx: idx + L_sym]
                 idx += L_sym
 
-        data_idx = data_indices(samp_rate)
+        data_idx = self.data_indices(samp_rate)
 
         for s in range(N_sym):
             if   s == 2: # Symbol #3
@@ -170,7 +171,7 @@ class djiencoder:
         x_frac += np.random.randn(len(x_frac)) * phase_noise
         return (x_frac, np.interp(x_frac, range(len(iq)), iq))
 
-    def data_indices(self, samp_rate):
+    def data_indices(self, samp_rate=15.36e6):
         N_c = self.droneid["data_carriers"]
         N_fft  = self.fft_size(samp_rate)
         idx_dc = N_fft // 2
@@ -343,7 +344,7 @@ class djiencoder:
         else:
             msg = np.array(msg)
         frm = np.zeros(7200, dtype=np.uint8)
-        res = libdt.dt_turbo_fwd(frm.ctypes.data_as(ct.POINTER(ct.c_uint8)), msg.ctypes.data_as(ct.POINTER(ct.c_uint8)))
+        res = self.libdt.dt_turbo_fwd(frm.ctypes.data_as(ct.POINTER(ct.c_uint8)), msg.ctypes.data_as(ct.POINTER(ct.c_uint8)))
         return frm
 
     def scramble(self, bits, gs=None):
@@ -448,7 +449,7 @@ class djiencoder:
 
     def cnoise(self, num=100, pwr_db=10):
         a = 10**(pwr_db / 20) * np.sqrt(.5)
-        return a* (np.random.randn(num) + 1j*np.random.randn(num))
+        return a * (np.random.randn(num) + 1j*np.random.randn(num))
 
 if __name__ == '__main__':
     pass

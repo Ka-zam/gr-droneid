@@ -2,7 +2,9 @@
 import numpy as np
 import tkinter
 import customtkinter
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -20,11 +22,44 @@ class App(customtkinter.CTk):
         self.grid_columnconfigure((2, 3), weight=0)
         self.grid_rowconfigure((0, 1, 2), weight=1)
 
+        self.canvas = customtkinter.CTkCanvas(self)
+        self.canvas.grid(row=1, column=1, padx=(20, 20), pady=(20, 20), sticky="nsew")        
+
         self.slider_1 = customtkinter.CTkSlider(self, from_=0, to=7, number_of_steps=11)
+        self.slider_1.grid(row=3, column=0, padx=(20, 10), pady=(10, 10), sticky="ew")
+        self.plot()
 
+    def plot(self):
+      
+        # the figure that will contain the plot
+        fig = Figure(figsize = (6, 6), dpi = 100)
+      
+        # list of squares
+        y = [i**2 for i in range(101)]
+      
+        # adding the subplot
+        plot1 = fig.add_subplot(3,3,1)
+      
+        # plotting the graph
+        plot1.plot(y)
+      
+        # creating the Tkinter canvas
+        # containing the Matplotlib figure
+        canvas = FigureCanvasTkAgg(fig,master=self.canvas)
+        canvas.get_tk_widget().pack(expand=1)
 
-        # self.checkbox_slider_frame = customtkinter.CTkFrame(self)
-        # self.checkbox_slider_frame.grid(row=1, column=3, padx=(20, 20), pady=(20, 0), sticky="nsew")        
+        #canvas.draw()
+      
+        # placing the canvas on the Tkinter window
+        #canvas.get_tk_widget().pack()
+      
+        # creating the Matplotlib toolbar
+        #toolbar = NavigationToolbar2Tk(canvas,tkinter.Tk())
+        #toolbar.update()
+      
+        # placing the toolbar on the Tkinter window
+        #canvas.get_tk_widget().pack()        
+
 
 
 
