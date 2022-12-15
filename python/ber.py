@@ -4,6 +4,13 @@ from sys import argv, exit
 import djidecoder
 import djiencoder
 
+def ber(tx, rx):
+    err = 0
+    for x,y in zip(tx["raw_bits"], rx["raw_bits"]):
+        if x != y:
+            err += 1
+    return err
+
 
 if __name__ == '__main__':
     #import matplotlib.pyplot as plt
@@ -11,13 +18,14 @@ if __name__ == '__main__':
         print("Usage:\n {} SNR_DB".format(argv[0]))
         exit(0)
     try:
-        snr = float(argv[1])
+        snr_db = float(argv[1])
     except Exception as e:
         raise e
     
     e = djiencoder.djiencoder()
     d = djidecoder.djidecoder()
 
-    tx = e.msg_to_signal(snr)
-    rx = d.decode(tx)
-    print("Serial: {}".format(rx["payload"][7: 7 + 16]))
+    tx = e.encode(snr_db)
+    rx = d.decode(tx["signal"])
+    print("Serial    : {}".format(rx["payload"][7: 7 + 16]))
+    print("Raw errors: {}".format(ber(tx,rx)))

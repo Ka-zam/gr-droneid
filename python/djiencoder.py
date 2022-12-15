@@ -59,6 +59,31 @@ class djiencoder:
         self.gs = self.golden_sequence()
         self.indices = self.data_indices()
 
+    def encode(self, snr_db=np.inf, samp_rate=15.36e6):
+        payload = self.frame()
+        bits = self.turbo_fwd(payload)
+        raw_bits = self.scramble(bits, self.gs)
+        syms = self.bits_to_qpsk(raw_bits)
+        bb = self.baseband(syms, samp_rate, print_idx=False)
+
+        pre = np.zeros(1000, dtype=np.complex128)
+        post = np.zeros(1000, dtype=np.complex128)
+        sig = np.concatenate([pre, bb, post])
+
+        if snr_db == np.inf:
+            pass
+        else:
+            sig_pwr = 10 * np.log10(np.var(bb))
+            nse = self.cnoise(len(sig), sig_pwr - snr_db)
+            sig += nse
+        sig /= np.max([np.max(np.real(sig)), np.max(np.imag(sig))])
+
+        res = {}
+        res["payload"] = payload
+        res["raw_bits"] = raw_bits
+        res["signal"] = sig
+        return res
+
     def msg_to_signal(self, snr_db=20, msg_dict={}, samp_rate=15.36e6):
         bb = self.msg_to_baseband(msg_dict, samp_rate)
         pre = np.zeros(1000, dtype=np.complex128)
