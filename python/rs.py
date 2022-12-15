@@ -8,7 +8,7 @@ def makefile(bb, samp_rate=15.36e6, period_ms=10, sro_ppm=0):
     if period_ms < 1:
         print("Minimum period is 1ms")
         return None
-    elif period_ms > 1000:
+    elif period_ms > 640:
         print("Maximum period is 640ms")
         return None
     samples_per_period = round(samp_rate * period_ms * 1e-3)
@@ -16,7 +16,7 @@ def makefile(bb, samp_rate=15.36e6, period_ms=10, sro_ppm=0):
 
     # Generate droneid message from bb and fill up to one period
     blank_len = samples_per_period - len(bb)
-    bb = np.concatenate([bb, np.zeros(blank_len, dtype=np.complex64)])
+    bb = np.concatenate([bb, np.zeros(blank_len, dtype=np.complex128)])
     bs = rs_wv(bb, samp_rate, "DroneID, PRF: {:6.2f} Hz".format(prf))
     return bs
 
@@ -47,16 +47,17 @@ def blank(num_samples, samp_rate=15.36e6, sro_ppm=0):
     num_bytes = num_samples * 2 * 2 + 1 # le_int16 encoding
     date_str = now().strftime('%Y-%m-%d;%H:%M:%S')
     actual_samp_rate = samp_rate * (1. + sro_ppm * 1e-6)    
+    blank_data = b'\x00' * num_samples * 2 * 2
 
-    bs += b'{CLOCK: ' + "{:9.3f}}}".format(actual_samp_rate).encode('ascii')
+    bs  = b'{CLOCK: ' + "{:9.3f}}}".format(actual_samp_rate).encode('ascii')
     bs += b'{LEVEL OFFS: 200,200}'
     bs += b'{DATE: ' + "{}}}".format(date_str).encode('ascii')
     bs += b'{COPYRIGHT: Skysense AB}'
     bs += b'{COMMENT: Blank segment}'
     bs += b'{SAMPLES: ' + "{:d}}}".format(num_samples).encode('ascii')
     bs += b'{WAVEFORM-' + "{:d}:#".format(num_bytes).encode('ascii')
-    bs += b'\x00' * num_samples * 2 * 2 + b'}'
-    bs  = b'{TYPE: SMU-WV,' + "{:d}}}".format(crc(iq_bytes)).encode('ascii') + bs    
+    bs +=  blank_data + b'}'
+    bs  = b'{TYPE: SMU-WV,' + "{:d}}}".format(crc(blank_data)).encode('ascii') + bs
     return bs
 
 def cfo_sco(crystal_err_ppm=0., fc=2414.5e6, samp_rate=15.36e6):

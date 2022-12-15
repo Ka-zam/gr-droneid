@@ -56,6 +56,10 @@ class djidecoder:
         self.data_carriers = 600
         self.taps4 = self.filter_taps(symbol=4)
         self.taps6 = self.filter_taps(symbol=6)
+        self.channel4 = np.fft.fftshift( np.fft.fft(np.conj(self.taps4))) # Need the actual ZC seq
+        #self.channel4 /= np.max(np.abs(self.channel4))
+        self.channel6 = np.fft.fftshift( np.fft.fft(np.conj(self.taps6))) # Need the actual ZC seq
+        #self.channel6 /= np.max(np.abs(self.channel6))
         self.indices = self.data_indices()
         self.gs = self.golden_sequence()
         self.baud_rate = 15.36e6
@@ -85,6 +89,8 @@ class djidecoder:
         res = self.libdt.dt_turbo_rev(msg.ctypes.data_as(ct.POINTER(ct.c_uint8)), frame.ctypes.data_as(ct.POINTER(ct.c_uint8)))
         status = np.int32(np.uint32(res >> 32))
         crc = res & 0xffffffff
+        # Expect this to be 0x00 for passing CRC
+        #print("libdt CRC: {:02x}".format(crc)) 
         return msg       
 
     def demodulate_qpsk_soft(self, qpsk_syms):
@@ -127,13 +133,28 @@ class djidecoder:
             syms[r,:] = fd_syms[r,self.indices]
         return syms
 
+    def channel_equalize(self, qpsk_syms, channel_estimate):
+        for r in range( qpsk_syms.shape[0]):
+            qpsk_syms[r,:] *= channel_estimate
+        return qpsk_syms        
+
+    def channel_estimate(self,data_fd, symbol=4, method='naive'):
+        if symbol == 4:
+            return (self.channel4 / (data_fd + 1.e-10))[self.indices]
+        elif symbol == 6:
+            return (self.channel6 / (data_fd + 1.e-10))[self.indices]
+        else:
+            return np.ones(len(self.indices), dtype=np.complex128)
+
     def frequency_domain_symbols(self, td_syms):
+        # Return frequency domain symbols
         syms = np.zeros((self.droneid["symbols"], self.ofdm_symbol_len), dtype=np.complex128)
         for r in range( td_syms.shape[0]):
             syms[r,:] = np.fft.fftshift( np.fft.fft(td_syms[r,:]))
         return syms
 
     def time_domain_symbols(self, data):
+        # Return time domain samples sans CP
         # assumes start of waveform is at data[0]
         syms = np.zeros((self.droneid["symbols"], self.ofdm_symbol_len), dtype=np.complex128)
         cp_seq = self.droneid["cp_seq"][-self.droneid["symbols"]:]
@@ -254,7 +275,7 @@ class djidecoder:
         return gs           
 
 if __name__ == '__main__':
-    #import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt
     if len(argv) == 1:
         print("Usage:\n {} iq.fc64".format(argv[0]))
         exit(0)
@@ -277,9 +298,17 @@ if __name__ == '__main__':
 
     syms_td = d.time_domain_symbols(data)
     syms_fd = d.frequency_domain_symbols(syms_td)
+
+    #plt.plot(np.real(data))
+    #plt.show()
+
     syms_qpsk = d.qpsk_symbols(syms_fd)
+
+    if True: # Do channel equalization
+        ch4_est = d.channel_estimate(syms_fd[2,:], 'naive')
+        d.channel_equalize(syms_qpsk, ch4_est)
+
     hard_bits = d.demodulate_qpsk_hard(syms_qpsk)
-    soft_bits = d.demodulate_qpsk_soft(syms_qpsk)
     print("Demodulated bits            : {}".format(len(hard_bits)))
     hard_bits = d.descramble(hard_bits)
     print("Descrambled bits            : {}".format(len(hard_bits)))
@@ -289,9 +318,8 @@ if __name__ == '__main__':
     serial = hard_msg[7: 7 + 16]
     uuid = hard_msg[69: 69 + 19]
     rx_crc = hard_msg[-3:]
-    cmp_crc = d.frame_crc_fct(hard_msg[:173])
+    cmp_crc = d.frame_crc_fct(hard_msg)
     print("Serial                      : >{:16s}<".format(serial.decode()))
     print("UUID                        : >{:19s}<".format(uuid.decode()))
     print("Received CRC                : {}".format(rx_crc.hex()))
-    print("Computed CRC                : {:02x}".format(cmp_crc))
-    print("Decoder status              : {}".format(["Failure", "Success", ][cmp_crc == int.from_bytes(rx_crc, "big")] ))
+    print("CRC Check                   : {}".format(["Failure", "Success", ][cmp_crc == 0]))
