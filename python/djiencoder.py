@@ -77,8 +77,10 @@ class djiencoder:
             nse = self.cnoise(len(sig), sig_pwr - snr_db)
             sig += nse
         if sto > 0.0:
+            sco = -45e-6 * samp_rate / len(sig)
+            xs = np.linspace(0, sco, len(sig))
             xp = np.linspace(0, len(sig) - 1, len(sig))
-            x = xp + (np.abs(sto) % 1.);
+            x = xs + xp + (np.abs(sto) % 1.);
             sig = np.interp(x, xp, sig)
         sig /= np.max([np.max(np.real(sig)), np.max(np.imag(sig))])
 
