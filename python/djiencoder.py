@@ -59,19 +59,15 @@ class djiencoder:
         self.gs = self.golden_sequence()
         self.indices = self.data_indices() 
 
-    def encode(self, snr_db=np.inf, samp_rate=15.36e6):
+    def encode(self, snr_db=np.inf, sto=0.0, samp_rate=15.36e6):
         payload = self.frame()
         raw_bits = self.turbo_fwd(payload)
-        #print("raw    : {}".format(raw_bits[:10]))
         scrambled_bits = self.scramble(raw_bits)
-        #scrambled_bits = self.scr(raw_bits)
-        #print("raw    : {}".format(raw_bits[:10]))
-        #print("scr    : {}".format(scrambled_bits[:10]))
         syms = self.bits_to_qpsk(scrambled_bits)
         bb = self.baseband(syms, samp_rate, print_idx=False)
 
-        pre = np.zeros(1000, dtype=np.complex128)
-        post = np.zeros(1000, dtype=np.complex128)
+        pre = np.zeros(2000, dtype=np.complex128)
+        post = np.zeros(224, dtype=np.complex128)
         sig = np.concatenate([pre, bb, post])
 
         if snr_db == np.inf:
@@ -80,7 +76,12 @@ class djiencoder:
             sig_pwr = 10 * np.log10(np.var(bb))
             nse = self.cnoise(len(sig), sig_pwr - snr_db)
             sig += nse
+        if sto > 0.0:
+            xp = np.linspace(0, len(sig) - 1, len(sig))
+            x = xp + (np.abs(sto) % 1.);
+            sig = np.interp(x, xp, sig)
         sig /= np.max([np.max(np.real(sig)), np.max(np.imag(sig))])
+
 
         res = {}
         res["payload"] = payload

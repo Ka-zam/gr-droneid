@@ -281,11 +281,8 @@ class djidecoder:
             raise e
 
         idx = self.first_baseband_sample(data)
-        if idx[0] != idx[1]:
-            return None
         # Strip data
-        data = data[idx[0]:]
-        idx = self.first_baseband_sample(data)
+        data = data[idx[0]:] # Trust symbol 4
         ifo = self.integer_frequency_estimate(data)
         ffo = self.fractional_frequency_estimate(data)
         syms_td = self.time_domain_symbols(data)
@@ -304,6 +301,7 @@ class djidecoder:
         res["descrambled_bits"] = descrambled_bits
         res["start_idx"] = idx
         res["constellation"] = syms_qpsk
+        res["signal"] = rx_dict["signal"]        
         return res
 
 if __name__ == '__main__':

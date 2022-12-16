@@ -24,17 +24,22 @@ if __name__ == '__main__':
         exit(0)
     try:
         snr_db = float(argv[1])
+        sto = float(argv[2])
     except Exception as e:
         raise e
     
     enc = djiencoder.djiencoder()
     dec = djidecoder.djidecoder()
 
-    tx = enc.encode(snr_db)
+    tx = enc.encode(snr_db, sto=sto)
+    #plt.plot(np.real(tx["signal"]))
+    #plt.show()
     rx = dec.decode(tx)
-    print("Serial : {}".format(rx["payload"][7: 7 + 16]))
-    print("BER    : {}".format(ber(tx,rx)))
-    print("FER    : {}".format(fer(tx,rx)))
+    print("Sig        : {}".format(len(rx["signal"])))
+    print("Start S4,S6: {}".format(rx["start_idx"]))
+    print("Serial     : {}".format(rx["payload"][7: 7 + 16]))
+    print("BER        : {}".format(ber(tx,rx)))
+    print("FER        : {}".format(fer(tx,rx)))
 
     fig = plt.figure(figsize=(10, 10))
     plt.subplot(3,3,1)
