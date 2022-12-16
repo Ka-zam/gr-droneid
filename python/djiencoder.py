@@ -57,13 +57,17 @@ class djiencoder:
         # 1 added from the left to poly
         self.frame_crc_fct = mkCrcFun(0x1864cfb, 0x00, False, 0x00) # returns integer
         self.gs = self.golden_sequence()
-        self.indices = self.data_indices()
+        self.indices = self.data_indices() 
 
     def encode(self, snr_db=np.inf, samp_rate=15.36e6):
         payload = self.frame()
-        bits = self.turbo_fwd(payload)
-        raw_bits = self.scramble(bits, self.gs)
-        syms = self.bits_to_qpsk(raw_bits)
+        raw_bits = self.turbo_fwd(payload)
+        #print("raw    : {}".format(raw_bits[:10]))
+        scrambled_bits = self.scramble(raw_bits)
+        #scrambled_bits = self.scr(raw_bits)
+        #print("raw    : {}".format(raw_bits[:10]))
+        #print("scr    : {}".format(scrambled_bits[:10]))
+        syms = self.bits_to_qpsk(scrambled_bits)
         bb = self.baseband(syms, samp_rate, print_idx=False)
 
         pre = np.zeros(1000, dtype=np.complex128)
@@ -81,6 +85,7 @@ class djiencoder:
         res = {}
         res["payload"] = payload
         res["raw_bits"] = raw_bits
+        res["scrambled_bits"] = scrambled_bits
         res["signal"] = sig
         return res
 
@@ -372,16 +377,14 @@ class djiencoder:
         res = self.libdt.dt_turbo_fwd(frm.ctypes.data_as(ct.POINTER(ct.c_uint8)), msg.ctypes.data_as(ct.POINTER(ct.c_uint8)))
         return frm
 
-    def scramble(self, bits, gs=None):
-        M_pn = 7200
-        if len(bits) != M_pn:
-            return None
-        elif gs is None:
+    def scramble(self, bits):
+        if len(bits) != len(self.gs):
             return None
         else:
-            for idx in range(M_pn):
-                bits[idx] ^= gs[idx]
-            return bits
+            scr = np.copy(bits)
+            for idx in range(len(self.gs)):
+                scr[idx] ^= self.gs[idx]
+            return scr
 
     def golden_sequence(self, x2_init=None):
         x1_init = bytes([1,] + [0,] * 30)

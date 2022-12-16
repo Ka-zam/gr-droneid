@@ -238,13 +238,13 @@ class djidecoder:
         return indices
 
     def descramble(self, bits):
-        M_pn = 7200
-        if len(bits) != M_pn:
+        if len(bits) != len(self.gs):
             return None
         else:
-            for idx in range(M_pn):
-                bits[idx] ^= self.gs[idx]
-            return bits
+            des = np.copy(bits)
+            for idx in range(len(self.gs)):
+                des[idx] ^= self.gs[idx]
+            return des
 
     def golden_sequence(self, x2_init=None):
         x1_init = bytes([1,] + [0,] * 30)
@@ -297,7 +297,7 @@ class djidecoder:
         res["payload"] = payload
         res["raw_bits"] = raw_bits
         res["descrambled_bits"] = descrambled_bits
-        res["idx"] = idx
+        res["start_idx"] = idx
         return res
 
 if __name__ == '__main__':
