@@ -274,7 +274,12 @@ class djidecoder:
             gs[idx] = (x1[idx + Nc] + x2[idx + Nc]) % 2
         return gs
 
-    def decode(self, data, equalize=False):
+    def decode(self, rx_dict, equalize=False):
+        try:
+            data = rx_dict["signal"]
+        except Exception as e:
+            raise e
+
         idx = self.first_baseband_sample(data)
         if idx[0] != idx[1]:
             return None

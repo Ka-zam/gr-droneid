@@ -11,6 +11,12 @@ def ber(tx, rx):
             err += 1
     return err
 
+def fer(tx, rx):
+    err = 0
+    for t,r in zip(tx["payload"], rx["payload"]):
+        err += (t ^ r).bit_count()
+    return err
+
 if __name__ == '__main__':
     #import matplotlib.pyplot as plt
     if len(argv) == 1:
@@ -21,11 +27,11 @@ if __name__ == '__main__':
     except Exception as e:
         raise e
     
-    e = djiencoder.djiencoder()
-    d = djidecoder.djidecoder()
+    enc = djiencoder.djiencoder()
+    dec = djidecoder.djidecoder()
 
-    tx = e.encode(snr_db)
-    rx = d.decode(tx["signal"])
-    rx["descrambled_bits"] = d.descramble(rx["raw_bits"])
+    tx = enc.encode(snr_db)
+    rx = dec.decode(tx)
     print("Serial    : {}".format(rx["payload"][7: 7 + 16]))
-    print("Raw errors: {}".format(ber(tx,rx)))
+    print("BER errors: {}".format(ber(tx,rx)))
+    print("FER errors: {}".format(fer(tx,rx)))
