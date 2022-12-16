@@ -286,11 +286,11 @@ class djidecoder:
         # Strip data
         data = data[idx[0]:]
         idx = self.first_baseband_sample(data)
-        ifo = self.integer_frequency_estimate(data)    
+        ifo = self.integer_frequency_estimate(data)
         ffo = self.fractional_frequency_estimate(data)
         syms_td = self.time_domain_symbols(data)
         syms_fd = self.frequency_domain_symbols(syms_td)
-        syms_qpsk = self.qpsk_symbols(syms_fd)    
+        syms_qpsk = self.qpsk_symbols(syms_fd)
         if equalize:
             ch4_est = self.channel_estimate(syms_fd[2,:], 'naive')
             self.channel_equalize(syms_qpsk, ch4_est)
@@ -303,6 +303,7 @@ class djidecoder:
         res["raw_bits"] = raw_bits
         res["descrambled_bits"] = descrambled_bits
         res["start_idx"] = idx
+        res["constellation"] = syms_qpsk
         return res
 
 if __name__ == '__main__':

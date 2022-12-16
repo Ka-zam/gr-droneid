@@ -18,7 +18,7 @@ def fer(tx, rx):
     return err
 
 if __name__ == '__main__':
-    #import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt
     if len(argv) == 1:
         print("Usage:\n {} SNR_DB".format(argv[0]))
         exit(0)
@@ -32,6 +32,17 @@ if __name__ == '__main__':
 
     tx = enc.encode(snr_db)
     rx = dec.decode(tx)
-    print("Serial    : {}".format(rx["payload"][7: 7 + 16]))
-    print("BER errors: {}".format(ber(tx,rx)))
-    print("FER errors: {}".format(fer(tx,rx)))
+    print("Serial : {}".format(rx["payload"][7: 7 + 16]))
+    print("BER    : {}".format(ber(tx,rx)))
+    print("FER    : {}".format(fer(tx,rx)))
+
+    fig = plt.figure(figsize=(10, 10))
+    plt.subplot(3,3,1)
+    plt.subplots_adjust(left=.05, bottom=0.05, right=.95, top=.95)
+    for r in range(rx["constellation"].shape[0]):
+        s = rx["constellation"][r,:]
+        plt.subplot(3,3,r+1)
+        plt.plot(np.real(s), np.imag(s), '*')
+    plt.draw()
+    plt.waitforbuttonpress(0)
+    plt.close(fig)    
