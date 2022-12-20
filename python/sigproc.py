@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import numpy as np
-from scipy.signal import decimate as dec
+from scipy.signal import decimate as scidec
 from sys import argv, exit
 
 def ftranslate(data, f=0.0, samp_rate=15.36e6):
@@ -11,7 +11,7 @@ def ftranslate(data, f=0.0, samp_rate=15.36e6):
 
 def decimate(data, samp_rate=61.44e6):
     Q = int(samp_rate / 15.36e6)
-    return dec(data, Q, ftype = 'fir', zero_phase=True)
+    return scidec(data, Q, ftype = 'fir', zero_phase=True)
 
 def spec(data, samp_rate=15.36e6):
     f = np.linspace(-samp_rate * .5 , samp_rate * .5, len(data))
