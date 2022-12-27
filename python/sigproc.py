@@ -15,7 +15,7 @@ def decimate(data, samp_rate=61.44e6):
 
 def spec(data, samp_rate=15.36e6):
     f = np.linspace(-samp_rate * .5 , samp_rate * .5, len(data))
-    w = 10 * np.log10(np.abs(np.fft.fftshift(np.fft.fft(data))))
+    w = 20. * np.log10(np.abs(np.fft.fftshift(np.fft.fft(data))))
     return (f, w)
 
 if __name__ == '__main__':

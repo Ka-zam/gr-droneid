@@ -127,6 +127,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+*.wisdom
+*.fc32
+*.fc64
 cpp/scratch
 *.bin
 *.o

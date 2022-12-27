@@ -82,7 +82,7 @@ class djiencoder:
             xp = np.linspace(0, len(sig) - 1, len(sig))
             x = xs + xp + (np.abs(sto) % 1.);
             sig = np.interp(x, xp, sig)
-        sig /= np.max([np.max(np.real(sig)), np.max(np.imag(sig))])
+        sig /= np.max([np.max(np.abs(np.real(sig))), np.max(np.abs(np.imag(sig)))])
 
 
         res = {}
@@ -215,7 +215,7 @@ class djiencoder:
         indices += [i for i in range(idx_dc + 1     , idx_dc + N_right + 1)]
         return indices
 
-    def create_zc_sequence(self, samp_rate, symbol=3):
+    def create_zc_sequence(self, samp_rate, symbol=4):
         # DJI OFDM settings
         if samp_rate < 15.36e6:
             return None

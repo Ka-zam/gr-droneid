@@ -136,7 +136,7 @@ class djidecoder:
     def channel_equalize(self, qpsk_syms, channel_estimate):
         for r in range( qpsk_syms.shape[0]):
             qpsk_syms[r,:] *= channel_estimate
-        return qpsk_syms        
+        return qpsk_syms
 
     def channel_estimate(self,data_fd, symbol=4, method='naive'):
         if symbol == 4:
@@ -145,6 +145,10 @@ class djidecoder:
             return (self.channel6 / (data_fd + 1.e-10))[self.indices]
         else:
             return np.ones(len(self.indices), dtype=np.complex128)
+
+    def snr_estimate(self, td_syms, symbol=4):
+            xc = np.correlate(td_syms[2,:], np.conj(self.taps4), mode='valid') # need td ZC
+            return xc
 
     def frequency_domain_symbols(self, td_syms):
         # Return frequency domain symbols
@@ -226,7 +230,7 @@ class djidecoder:
         zc_w[n // 2] = 0.0 # Set DC to 0
         zc_w = np.fft.fftshift(zc_w)
         zc = np.fft.ifft(zc_w)
-        return np.conj(zc)
+        return np.conj(zc)  
 
     def data_indices(self):
         idx_dc = self.ofdm_symbol_len // 2
