@@ -249,6 +249,9 @@ class djidecoder:
             for idx in range(len(self.gs)):
                 des[idx] ^= self.gs[idx]
             return des
+    
+    def success(self, rx_dict):
+        return self.frame_crc_fct(rx_dict["payload"]) == 0x00
 
     def golden_sequence(self, x2_init=None):
         x1_init = bytes([1,] + [0,] * 30)
