@@ -1,17 +1,18 @@
 #include <stdio.h>
-#include <math.h>
+#include <stdlib.h> //rand()
+#include <unistd.h>
 #include <complex.h>
-#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+#include <inttypes.h>
+
 #include <fftw3.h>
 
 /*
 gcc -o benchfft -march=native -O3 -std=c99 benchfft.c -lm -lfftw3
 */
 
-float _Complex 
-fun(float _Complex x,float _Complex y){
-    return 1.234f + 4.567*I;
-}
+typedef _Complex float cxf_t;
 
 void
 save(char* fn, const float _Complex *data, const size_t num) {
@@ -31,6 +32,23 @@ randn() {
     return u * c;
 }
 
+#include <time.h>
+
+struct timespec 
+tic() {
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return ts;
+}
+
+uint64_t 
+toc(struct timespec ts){
+    struct timespec te;
+    clock_gettime(CLOCK_REALTIME, &te);
+    uint64_t ns = (te.tv_sec - ts.tv_sec) * 1000000000UL + (te.tv_nsec - ts.tv_nsec);
+    return ns;
+}
+
 void
 gen_data(_Complex float *data, size_t num) {
     float f1 = 33.f;
@@ -48,31 +66,43 @@ gen_data(_Complex float *data, size_t num) {
 
 int
 main(int argc, char** argv) {
-    const size_t N = 1024*2;
-    float _Complex *in, *out;
-    in = (fftwf_complex*) fftwf_malloc( N * sizeof(fftwf_complex));
-    out = (fftwf_complex*) fftwf_malloc( N * sizeof(fftwf_complex));
+    //cxf_t c= fun(1.f+I,2.fI);
+    //printf("%f%+fi\n", creal(c), cimag(c));
+    const size_t N = 1024*4;
+    cxf_t *in, *out;
+    in = (cxf_t*) fftwf_malloc( N * sizeof(cxf_t));
+    out = (cxf_t*) fftwf_malloc( N * sizeof(cxf_t));
     fftwf_plan p;
     
-    gen_data(in, N);
-    save("in.fc32", in, N);
-    printf("%s\n", fftwf_version);
-
+    printf("Using FFTW3 version: %s\n", fftwf_version);
     if (fftwf_import_wisdom_from_filename("fftw3f.wisdom")) {
         printf("%s\n", "Imported wisdom");      
     }
 
     p = fftwf_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_WISDOM_ONLY);
-    if (!p) {
+    if (p) {
+        printf("%s\n", "Generated plan from wisdom");
+    } else {
         printf("%s\n", "There was no wisdom, generating...");
         p = fftwf_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_PATIENT);
         fftwf_export_wisdom_to_filename("fftw3f.wisdom");
-    } else {
-        printf("%s\n", "Generated plan from wisdom");
     }
+    
+    gen_data(in, N);
+    save("in.fc32", in, N);
 
-    fftwf_execute(p);
-    printf("%s\n", "Executed FFT");
+    struct timespec now = tic();
+
+    /*
+    */
+    for (int i = 0; i < 1000000; ++i)
+    {
+        fftwf_execute(p);
+    }
+    //sleep(1.0);
+    uint64_t nanos = toc(now);
+
+    printf("%s in %9.3f ms\n", "Executed FFT", nanos / 1000000.f);
     fftwf_destroy_plan(p);
 
     save("out.fc32", out, N);
