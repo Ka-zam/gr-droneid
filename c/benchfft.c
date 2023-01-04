@@ -13,6 +13,17 @@ gcc -o benchfft -march=native -O3 -std=c99 benchfft.c -lm -lfftw3
 */
 
 typedef _Complex float cxf_t;
+typedef struct io_s
+{
+    uint64_t num_fft;
+    cxf_t   *data;
+    uint64_t num_data;
+    cxf_t   *fft_in;
+    cxf_t   *fft_out;
+    cxf_t   *taps;
+    uint64_t num_taps;
+    fftwf_plan p;
+} io_t;
 
 void
 save(char* fn, const float _Complex *data, const size_t num) {
@@ -62,6 +73,49 @@ gen_data(_Complex float *data, size_t num) {
         *data += n * M_SQRT1_2 * (randn() + I * randn());
         data++;
     }
+}
+
+/*
+def overlap_save(x, h, Nfft=None):
+    Nfft = max(Nfft or x.size + h.size - 1, h.size)
+    hf = np.conj(np.fft.fft(h, Nfft))
+
+    nvalid = Nfft - h.size + 1
+    y = np.empty_like(x)
+    offset = 0
+    chunk = np.zeros(Nfft, dtype=x.dtype)
+    while offset < x.size:
+        thislen = min(offset + Nfft, x.size) - offset
+        chunk[thislen:] = 0
+        chunk[:thislen] = x[offset:offset + thislen]
+        chunk = np.fft.ifft(np.fft.fft(chunk) * hf)
+
+        thisend = min(offset + nvalid, x.size) - offset
+        if np.iscomplexobj(y):
+            y[offset:offset + thisend] = chunk[:thisend]
+        else:
+            y[offset:offset + thisend] = chunk[:thisend].real
+
+        offset += nvalid
+    return y
+*/
+
+void
+overlap_save(const fftwf_plan *p, 
+        const size_t nfft, 
+        const cxf_t *in, 
+        size_t num_in, 
+        cxf_t *out, 
+        cxf_t *taps_f, 
+        size_t num_taps) 
+{
+    const uint64_t overlap = nfft - num_taps + 1;
+    uint64_t ptr = 0;
+
+    while (ptr < num_in) {
+        ptr += overlap;
+    }
+
 }
 
 int

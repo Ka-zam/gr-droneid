@@ -122,9 +122,9 @@ int bladerf_lb_impl::work(int noutput_items,
     volk_16i_s32f_convert_32f((float*) m_complex32buf, (int16_t*) m_uint32buf, 2048.f, 2 * noutput_items);
     memcpy(out, m_complex32buf, noutput_items * sizeof(gr_complex));
 
-    int32_t diff = (m_uint32buf[noutput_items - 1] - m_uint32buf[0]) - (noutput_items - 1);
+    int64_t diff = (m_uint32buf[noutput_items - 1] - m_uint32buf[0]) - (noutput_items - 1);
     if (diff!=0) {
-        pmt::pmt_t msg = pmt::intern("Dropped " + std::to_string(diff) + "samples.");
+        pmt::pmt_t msg = pmt::intern("Dropped " + std::to_string(diff) + " samples.");
         message_port_pub(m_port, msg);
     }
     return noutput_items;

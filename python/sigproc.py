@@ -1,12 +1,10 @@
 #!/usr/bin/python3
 import numpy as np
 from scipy.signal import decimate as scidec
+from scipy.signal import remez
 from sys import argv, exit
 
 def overlap_save(x, h, Nfft=None):
-    # 
-    #
-    #
     Nfft = max(Nfft or x.size + h.size - 1, h.size)
     hf = np.conj(np.fft.fft(h, Nfft))
 
@@ -29,6 +27,28 @@ def overlap_save(x, h, Nfft=None):
         offset += nvalid
     return y
 
+def bpf_taps(num_taps=32, samp_rate=61.44e6):
+    # 2399.5    2414.5    2429.5    2444.5    2459.5 
+    #  rare 
+    # Channel width 10 MHz, bladeRF analog bandwith is 56 MHz
+    # 2464.5 - 2409.5 = 55 MHz
+    # 4 channel case:
+    #  FC = 2436.5, FS = 61.44e6
+    #
+    if np.isclose(samp_rate, 61.44e6):
+        fc = 2437.e6
+        f_ch = np.array([2414.5, 2429.5, 2444.5, 2459.5]) * 1e6
+        f_nor = (f_ch - fc) / samp_rate
+
+    band_edge_lo = 5.5e6 / samp_rate
+    band_edge_hi = 8.0e6 / samp_rate
+    lpf = remez(num_taps, [0., band_edge_lo, band_edge_hi, .5,], [1.,0.], type='bandpass')
+    n = np.arange(-(num_taps - 1) / 2, (num_taps - 1) / 2 + 1)
+    taps = []
+    for f in f_nor:
+        taps.append(lpf * np.exp(1j * 2 * np.pi * n * f))
+    return taps
+
 def ftranslate(data, f=0.0, samp_rate=15.36e6):
     T = 1. / samp_rate
     t = np.arange(0.,  T * len(data), T)
@@ -41,8 +61,8 @@ def decimate(data, samp_rate=61.44e6):
 
 def spec(data, samp_rate=15.36e6):
     f = np.linspace(-samp_rate * .5 , samp_rate * .5, len(data))
-    w = 20. * np.log10(np.abs(np.fft.fftshift(np.fft.fft(data))))
-    return (f, w)
+    sxx = 20. * np.log10(np.abs(np.fft.fftshift(np.fft.fft(data))))
+    return (f, sxx)
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt

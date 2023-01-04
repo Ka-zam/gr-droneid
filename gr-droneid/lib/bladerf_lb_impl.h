@@ -27,9 +27,9 @@ private:
     uint64_t m_count;
 
     static constexpr int MAX_CONSECUTIVE_FAILURES = 3;
-    static constexpr int SAMPLES_PER_BUFFER = 1024*32;
-    static constexpr int NUMBER_OF_BUFFERS = 1024;
-    static constexpr int NUMBER_OF_TRANSFERS = 32;
+    static constexpr int SAMPLES_PER_BUFFER = 8192;
+    static constexpr int NUMBER_OF_BUFFERS = 256 ;
+    static constexpr int NUMBER_OF_TRANSFERS = 64;
     static constexpr int STREAM_TIMEOUT_MS = 6000;
     static constexpr int SYNC_TIMEOUT_MS = 9000;
 public:
