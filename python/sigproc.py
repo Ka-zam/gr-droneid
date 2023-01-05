@@ -4,6 +4,12 @@ from scipy.signal import decimate as scidec
 from scipy.signal import remez
 from sys import argv, exit
 
+def c(d,t,w):
+    s = d * 1000 / t
+    vo2 = (0.1 * s + 3.5) * 1e-3 * w
+    c = vo2 * 5. * t
+    return c
+
 def overlap_save(x, h, Nfft=None):
     Nfft = max(Nfft or x.size + h.size - 1, h.size)
     hf = np.conj(np.fft.fft(h, Nfft))
@@ -49,11 +55,11 @@ def bpf_taps(num_taps=32, samp_rate=61.44e6):
         taps.append(lpf * np.exp(1j * 2 * np.pi * n * f))
     return taps
 
-def ftranslate(data, f=0.0, samp_rate=15.36e6):
+def ftranslate(data, f=0.0, samp_rate=15.36e6, phase=0.):
     T = 1. / samp_rate
     t = np.arange(0.,  T * len(data), T)
     e = np.exp(1j * 2. * np.pi * t * f)
-    return data * e
+    return data * e * np.exp(1j * phase * np.pi / 180.)
 
 def decimate(data, samp_rate=61.44e6):
     Q = int(samp_rate / 15.36e6)

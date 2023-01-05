@@ -135,6 +135,7 @@ cpp/decoder
 c/benchfft
 *.bin
 *.o
+a.out
 build/
 gr-droneid/examples/*.py
 gr-droneid/examples/*.fc32

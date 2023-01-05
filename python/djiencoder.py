@@ -215,7 +215,15 @@ class djiencoder:
         indices += [i for i in range(idx_dc + 1     , idx_dc + N_right + 1)]
         return indices
 
-    def create_zc_sequence(self, samp_rate, symbol=4):
+    def zc_symbol(self, symbol=3, samp_rate=15.36e6):
+        P = self.short_cp_size(samp_rate)
+        if   symbol == 3: # Symbol #3
+            s = self.create_zc_sequence(samp_rate, symbol=3)
+        elif symbol == 5: # Symbol #5
+            s = self.create_zc_sequence(samp_rate, symbol=5)
+        return np.concatenate([s[-P:], s])
+
+    def create_zc_sequence(self, samp_rate=15.36e6, symbol=4):
         # DJI OFDM settings
         if samp_rate < 15.36e6:
             return None
