@@ -111,7 +111,7 @@ class djiencoder:
     def msg_to_baseband(self, msg_dict={}, samp_rate=15.36e6):
         frm = self.frame(msg_dict)
         bits = self.turbo_fwd(frm)
-        bits = self.scramble(bits, self.gs)
+        bits = self.scramble(bits)
         syms = self.bits_to_qpsk(bits)
         bb = self.baseband(syms, samp_rate, print_idx=False)
         return bb
@@ -196,7 +196,8 @@ class djiencoder:
             sym = ofdm_symbols_time[s, :]
             iq[idx: idx + cp_len + N_fft] = np.concatenate([cp, sym])
             idx += cp_len + N_fft
-        return iq / np.max(np.abs(iq))
+        iq /= np.max([np.max(np.real(iq)), np.max(np.imag(iq))])
+        return iq
 
     def sto(self, iq, sto_fraction=0.0, sco_error_ppm=0.0, phase_noise=0.0):
         x_frac =  np.linspace(sto_fraction, sto_fraction + len(iq) - 2, len(iq) - 1)

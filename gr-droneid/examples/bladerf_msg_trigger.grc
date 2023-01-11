@@ -41,6 +41,7 @@ blocks:
     cutoff_freq: 5e6
     gain: '1.0'
     samp_rate: samp_rate
+    value: ''
     width: 750e3
     win: window.WIN_HAMMING
   states:
@@ -256,7 +257,7 @@ blocks:
     bus_structure: null
     coordinate: [8, 804.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: blocks_rotator_cc_0
   id: blocks_rotator_cc
   parameters:
@@ -292,7 +293,7 @@ blocks:
     bus_structure: null
     coordinate: [264, 836.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: calibrate_bladerf_single_c_0
   id: calibrate_bladerf_single_c
   parameters:
@@ -300,6 +301,7 @@ blocks:
     alias: ''
     biastee_rx: '1'
     bw: int(samp_rate * 1.2)
+    ch: '0'
     comment: ''
     external_freq: '10000000'
     external_ref: '1'
@@ -316,7 +318,7 @@ blocks:
     bus_structure: null
     coordinate: [8, 620.0]
     rotation: 0
-    state: disabled
+    state: enabled
 - name: droneid_msg_trigger_0
   id: droneid_msg_trigger
   parameters:
@@ -345,7 +347,7 @@ blocks:
     bus_structure: null
     coordinate: [1400, 360.0]
     rotation: 0
-    state: true
+    state: disabled
 - name: droneid_save_msg_0
   id: droneid_save_msg
   parameters:
@@ -359,7 +361,7 @@ blocks:
     bus_structure: null
     coordinate: [1400, 276.0]
     rotation: 0
-    state: true
+    state: disabled
 - name: droneid_single_trigger_0
   id: droneid_single_trigger
   parameters:
@@ -415,7 +417,7 @@ blocks:
     bus_structure: null
     coordinate: [744, 260.0]
     rotation: 0
-    state: true
+    state: disabled
 - name: import_0
   id: import
   parameters:
@@ -608,4 +610,4 @@ connections:
 
 metadata:
   file_format: 1
-  grc_version: 3.10.2.0
+  grc_version: v3.11.0.0git-350-gb58667b4

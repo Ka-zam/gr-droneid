@@ -71,9 +71,7 @@ blocks:
     label: IQ Delay
     min_len: '200'
     orient: QtCore.Qt.Horizontal
-    outputmsgname: value
     rangeType: int
-    showports: 'False'
     start: '0'
     step: '1'
     stop: '20000'
@@ -94,9 +92,7 @@ blocks:
     label: Delay T1
     min_len: '200'
     orient: QtCore.Qt.Horizontal
-    outputmsgname: value
     rangeType: int
-    showports: 'False'
     start: '1000'
     step: '1'
     stop: '3000'
@@ -117,9 +113,7 @@ blocks:
     label: FC
     min_len: '200'
     orient: QtCore.Qt.Horizontal
-    outputmsgname: value
     rangeType: float
-    showports: 'False'
     start: '500'
     step: '.5'
     stop: '6000'
@@ -140,9 +134,7 @@ blocks:
     label: GAIN
     min_len: '200'
     orient: QtCore.Qt.Horizontal
-    outputmsgname: value
     rangeType: int
-    showports: 'False'
     start: '0'
     step: '1'
     stop: '60'
@@ -163,9 +155,7 @@ blocks:
     label: LO
     min_len: '200'
     orient: QtCore.Qt.Horizontal
-    outputmsgname: value
     rangeType: float
-    showports: 'False'
     start: '-2000'
     step: '1'
     stop: '2000'
@@ -198,9 +188,7 @@ blocks:
     label: Trig level
     min_len: '200'
     orient: QtCore.Qt.Horizontal
-    outputmsgname: value
     rangeType: float
-    showports: 'False'
     start: '0'
     step: '.05'
     stop: '50'
@@ -400,24 +388,6 @@ blocks:
     coordinate: [504, 444.0]
     rotation: 0
     state: true
-- name: fosphor_glfw_sink_c_0
-  id: fosphor_glfw_sink_c
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    freq_center: '0'
-    freq_span: samp_rate
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    wintype: window.WIN_KAISER
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [504, 556.0]
-    rotation: 0
-    state: disabled
 - name: import_0
   id: import
   parameters:
@@ -794,7 +764,6 @@ connections:
 - [blocks_rotator_cc_0, '0', blocks_delay_0_0, '0']
 - [blocks_rotator_cc_0, '0', blocks_file_sink_0, '0']
 - [blocks_rotator_cc_0, '0', fft_filter_xxx_0, '0']
-- [blocks_rotator_cc_0, '0', fosphor_glfw_sink_c_0, '0']
 - [blocks_rotator_cc_0, '0', qtgui_time_sink_x_0_0_0_0, '0']
 - [blocks_throttle_0, '0', virtual_sink_0, '0']
 - [calibrate_bladerf_single_c_0, '0', virtual_sink_0, '0']
@@ -805,4 +774,4 @@ connections:
 
 metadata:
   file_format: 1
-  grc_version: 3.10.4.0
+  grc_version: v3.11.0.0git-350-gb58667b4
