@@ -49,23 +49,27 @@ class e4400:
     def cmd_mem_cat(self):
         return "mmem:cat? \"arbi:\""
 
-    def cmd_arb(self, state):
+    def cmd_arb(self, state=False):
         s = "on" if state else "off"
         return ":source:radio:arb:state {}".format(s)
 
-    def cmd_mod(self, state):
+    def cmd_mod(self, state=False):
         s = "on" if state else "off"
         return ":output:modulation:state {}".format(s)
 
-    def cmd_power(self, power_dbm):
+    def cmd_power(self, power_dbm=-50.0):
         return "pow:ampl {:9.3f} dBm".format(power_dbm)
 
-    def cmd_freq(self, freq_mhz):
+    def cmd_freq(self, freq_mhz=2450):
         return "freq {:9.3f} MHz".format(freq_mhz)
 
-    def cmd_alc(self, state):
+    def cmd_alc(self, state=False):
         s = "on" if state else "off"
         return "pow:alc {}".format(s)
+
+    def cmd_output(self, state=False):
+        s = "on" if state else "off"
+        return ":output:state {}".format(s)
 
     def cmd_copy(self, file_name, direction="arbi"):
         if direction=="arbi":
