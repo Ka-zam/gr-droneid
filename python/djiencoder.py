@@ -84,7 +84,6 @@ class djiencoder:
             sig = np.interp(x, xp, sig)
         sig /= np.max([np.max(np.abs(np.real(sig))), np.max(np.abs(np.imag(sig)))])
 
-
         res = {}
         res["payload"] = payload
         res["raw_bits"] = raw_bits
@@ -92,20 +91,30 @@ class djiencoder:
         res["signal"] = sig
         return res
 
-    def msg_to_signal(self, snr_db=20, msg_dict={}, samp_rate=15.36e6):
+    def msg_to_signal(self, snr_db=np.Inf, msg_dict={}, samp_rate=15.36e6, period_ms=None):
+        PRE_LEN = 1000
+        POST_LEN = 1000
         bb = self.msg_to_baseband(msg_dict, samp_rate)
-        pre = np.zeros(1000, dtype=np.complex128)
-        post = np.zeros(1000, dtype=np.complex128)
+        pre = np.zeros(PRE_LEN, dtype=np.complex128)
+        post = np.zeros(POST_LEN, dtype=np.complex128)
         sig = np.concatenate([pre, bb, post])
         sig_pwr = 10 * np.log10(np.var(bb))
         # print("Signal power : {:7.2f}".format(sig_pwr))
-        nse = self.cnoise(len(sig), sig_pwr - snr_db)
-        nse_pwr = 10 * np.log10(np.var(nse))
+        if snr_db == np.Inf:
+            nse = np.zeros(len(sig), dtype=np.complex128)
+        else:
+            nse = self.cnoise(len(sig), sig_pwr - snr_db)
+        
+        #nse_pwr = 10 * np.log10(np.var(nse))
         # print("Noise power  : {:7.2f}".format(nse_pwr))
-        tot_pwr = 10 * np.log10(np.var(nse + sig))
+        #tot_pwr = 10 * np.log10(np.var(nse + sig))
         # print("Total power  : {:7.2f}".format(tot_pwr))
         sig += nse
         sig /= np.max([np.max(np.real(sig)), np.max(np.imag(sig))])
+        if period_ms != None:
+            no_samples_1ms = int(np.round(samp_rate * 1e-3))
+            nse = self.cnoise(no_samples_1ms * period_ms - len(sig), sig_pwr - snr_db)
+            sig = np.concatenate([sig, nse])
         return sig
 
     def msg_to_baseband(self, msg_dict={}, samp_rate=15.36e6):
