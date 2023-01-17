@@ -72,10 +72,14 @@ class e4400:
         return ":output:state {}".format(s)
 
     def cmd_copy(self, file_name, direction="arbi"):
-        if direction=="arbi":
-            (copy_to,copy_from)=("arbi","nvarbi")  
+        if direction == "arbi":
+            (copy_to, copy_from) = ("arbi", "nvarbi")
+        elif direction == "arbq":
+            (copy_to, copy_from) = ("arbq", "nvarbq")
+        elif direction == "nvarbi":
+            (copy_to, copy_from) = ("nvarbi", "arbi")
         else:
-            (copy_to,copy_from)=("nvarbi","arbi")
+            raise ValueError("direction = {} is not supported".format(direction))
         return ":memory:copy:name \"{0}:{2}\",\"{1}:{2}\"".format(copy_from, copy_to, file_name)
 
     def encode(self, float_array, flags_array=[]):
