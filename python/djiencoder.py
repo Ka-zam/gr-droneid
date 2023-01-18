@@ -47,8 +47,8 @@ class djiencoder:
 
         self.droneid = {}
         self.droneid["carrier_spacing"]  = 15.0e3 # Hz
-        self.droneid["data_carriers"]    = 600
         self.droneid["symbols"]          = 8
+        self.droneid["data_carriers"]    = 600
         self.droneid["zc_root_symbol_4"] = 600
         self.droneid["zc_root_symbol_6"] = 147
         self.droneid["cp_seq"]           = [1, 0, 0, 0, 0, 0, 0, 0, 1] # 1 is long
